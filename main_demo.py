@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 运筹学优化演示主程序
 Operations Research Optimization Main Demo
@@ -8,8 +10,6 @@ Operations Research Optimization Main Demo
 - 运输问题 (Transportation Problem)
 - 网络流优化 (Network Flow Optimization)
 
-作者: AI Assistant
-日期: 2024
 """
 
 import sys
@@ -17,6 +17,14 @@ import time
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
+
+# 适配中文目录结构：将各题模块目录加入 sys.path
+import os
+BASE_DIR = os.path.dirname(__file__)
+for d in ['线性规划', '整数规划', '运输问题', '网络流优化', '大规模优化', '可视化分析']:
+    p = os.path.join(BASE_DIR, d)
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 # 导入各个演示模块
 try:
@@ -26,12 +34,12 @@ try:
     from network_flow_demo import NetworkFlowDemo
 except ImportError as e:
     print(f"❌ 导入模块失败: {e}")
-    print("请确保所有演示文件都在同一目录下")
+    print("请确保各模块位于中文目录并已加入系统路径")
     sys.exit(1)
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 使用自定义字体配置支持中文
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class OperationsResearchMainDemo:
     """运筹学优化主演示类"""

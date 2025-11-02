@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 说明：本文件演示运输问题（TP）在供应链中的应用，包含基础运输与多产品运输的建模、求解、可视化与报告。
+# 语法与规则：使用PuLP连续非负变量；中文图表需加载字体；遵循项目的可视化与编码规范。
 """
 运输问题优化演示
 Transportation Problem Optimization Demo
@@ -17,14 +21,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pulp
 import warnings
+# 抑制非关键警告，保证教学输出清爽
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 路径与中文字体：移动到子目录后也能导入根目录的配置
+import os, sys
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class TransportationProblemDemo:
-    """运输问题演示类"""
+    """运输问题演示类
+    作用：封装基础运输与多产品运输的求解、可视化、敏感性分析与报告生成。
+    设计：面向对象组织流程；共享结果通过 self.results 以便各方法复用。
+    """
     
     def __init__(self):
         self.results = {}
@@ -37,8 +50,13 @@ class TransportationProblemDemo:
         """
         基础运输问题演示 - 供应链优化
         
-        问题描述：
-        3个工厂向4个仓库运输产品，最小化运输成本
+        作用：构建并求解经典运输问题（平衡或通过虚拟节点平衡），最小化运输成本。
+        语法要点：
+        - LpProblem(name, LpMinimize)
+        - LpVariable(f"x_{i}_{j}", lowBound=0) 连续非负变量表示从工厂i到仓库j的运输量
+        - 目标：Σ c_ij x_ij；约束：每个工厂的供应等式、每个仓库的需求等式
+        - 非平衡时添加“虚拟工厂/虚拟仓库”，成本为0以吸收差额
+        原理：线性规划的特殊结构（完全单调矩阵），可用运输单纯形法；此处用CBC求解器。
         """
         print("\n🚛 基础运输问题 - 供应链优化")
         print("-" * 40)
@@ -70,7 +88,7 @@ class TransportationProblemDemo:
         cost_df = pd.DataFrame(cost_matrix, index=factories, columns=warehouses)
         print(cost_df)
         
-        # 检查平衡性
+        # 检查平衡性：供应 ≠ 需求时增加虚拟节点以形成平衡问题
         original_warehouses = warehouses.copy()
         original_demand = demand.copy()
         
@@ -89,33 +107,33 @@ class TransportationProblemDemo:
                 cost_matrix = np.vstack([cost_matrix, np.zeros(len(warehouses))])
                 print(f"添加虚拟工厂，供应量: {supply[-1]} 吨")
         
-        # 使用PuLP求解
+        # 使用PuLP定义优化问题：最小化总运输成本
         prob = pulp.LpProblem("运输问题", pulp.LpMinimize)
         
-        # 决策变量：从工厂i到仓库j的运输量
+        # 决策变量：从工厂i到仓库j的运输量（非负连续）
         x = {}
         for i in range(len(factories)):
             for j in range(len(warehouses)):
                 x[i,j] = pulp.LpVariable(f"x_{i}_{j}", lowBound=0)
         
-        # 目标函数：最小化运输成本
+        # 目标函数：最小化运输成本 Σ c_ij x_ij
         prob += pulp.lpSum([cost_matrix[i][j] * x[i,j] 
                            for i in range(len(factories)) 
                            for j in range(len(warehouses))])
         
-        # 约束条件
-        # 1. 供应约束
+        # 约束条件：
+        # 1) 供应约束（每个工厂的发货量等于其供应）
         for i in range(len(factories)):
             prob += pulp.lpSum([x[i,j] for j in range(len(warehouses))]) == supply[i]
         
-        # 2. 需求约束
+        # 2) 需求约束（每个仓库的收货量等于其需求）
         for j in range(len(warehouses)):
             prob += pulp.lpSum([x[i,j] for i in range(len(factories))]) == demand[j]
         
-        # 求解
+        # 求解：CBC开源求解器，msg=0静默输出
         prob.solve(pulp.PULP_CBC_CMD(msg=0))
         
-        # 结果
+        # 结果：读取运输矩阵与目标值
         solution_matrix = np.zeros((len(factories), len(warehouses)))
         for i in range(len(factories)):
             for j in range(len(warehouses)):
@@ -132,7 +150,7 @@ class TransportationProblemDemo:
         print(f"\n📊 运输成本分析:")
         print(f"  最小运输成本: {min_transport_cost:.2f} 元")
         
-        # 计算各路线成本
+        # 计算各路线成本：便于识别高成本路线与优化机会
         print(f"\n🛣️  主要运输路线:")
         route_details = []
         for i in range(len(factories)):
@@ -149,7 +167,7 @@ class TransportationProblemDemo:
                     print(f"  {factories[i]} → {warehouses[j]}: "
                           f"{solution_matrix[i][j]:.1f}吨, 成本: {route_cost:.2f}元")
         
-        # 保存结果
+        # 保存结果以供后续可视化与报告
         self.results['basic'] = {
             'factories': factories,
             'warehouses': warehouses,
@@ -169,8 +187,12 @@ class TransportationProblemDemo:
         """
         多产品运输问题演示
         
-        问题描述：
-        2个工厂生产2种产品，向3个市场供应
+        作用：构建多索引运输模型（工厂×产品×市场），最小化总成本。
+        语法要点：
+        - 决策变量 x[i,p,j] 表示工厂i的产品p送至市场j的数量
+        - 供应约束：每个工厂每种产品的总发货量 ≤ 供应
+        - 需求约束：每个市场每种产品的总收货量 ≥ 需求
+        原理：仍为线性规划，但维度更高，适合展示结构化建模方法。
         """
         print("\n📦 多产品运输问题")
         print("-" * 30)
@@ -212,34 +234,34 @@ class TransportationProblemDemo:
         print(f"\n各产品总供应量: P1={supply_matrix[:, 0].sum()}, P2={supply_matrix[:, 1].sum()}")
         print(f"各产品总需求量: P1={demand_matrix[:, 0].sum()}, P2={demand_matrix[:, 1].sum()}")
         
-        # 使用PuLP求解
+        # 使用PuLP定义优化问题：最小化总运输成本
         prob = pulp.LpProblem("多产品运输问题", pulp.LpMinimize)
         
-        # 决策变量：从工厂i的产品p到市场j的运输量
+        # 决策变量：从工厂i的产品p到市场j的运输量（非负连续）
         x = {}
         for i in range(len(factories)):
             for p in range(len(products)):
                 for j in range(len(markets)):
                     x[i,p,j] = pulp.LpVariable(f"x_{i}_{p}_{j}", lowBound=0)
         
-        # 目标函数：最小化总运输成本
+        # 目标函数：最小化总运输成本 Σ c_{i,p,j} x_{i,p,j}
         prob += pulp.lpSum([cost_tensor[i][p][j] * x[i,p,j] 
                            for i in range(len(factories))
                            for p in range(len(products))
                            for j in range(len(markets))])
         
-        # 约束条件
-        # 1. 供应约束：每个工厂每种产品的供应量限制
+        # 约束条件：
+        # 1) 供应约束：每个工厂每种产品的供应量限制
         for i in range(len(factories)):
             for p in range(len(products)):
                 prob += pulp.lpSum([x[i,p,j] for j in range(len(markets))]) <= supply_matrix[i][p]
         
-        # 2. 需求约束：每个市场每种产品的需求量满足
+        # 2) 需求约束：每个市场每种产品的需求量满足
         for j in range(len(markets)):
             for p in range(len(products)):
                 prob += pulp.lpSum([x[i,p,j] for i in range(len(factories))]) >= demand_matrix[j][p]
         
-        # 求解
+        # 求解：CBC开源求解器，msg=0静默输出
         prob.solve(pulp.PULP_CBC_CMD(msg=0))
         
         # 结果
@@ -267,7 +289,7 @@ class TransportationProblemDemo:
                         print(f"  {factories[i]} {products[p]} → {markets[j]}: "
                               f"{quantity:.1f}单位, 成本: {cost:.2f}元")
         
-        # 保存多产品运输结果
+        # 保存多产品运输结果以供可视化与报告
         self.results['multi_product'] = {
             'factories': factories,
             'products': products,
@@ -282,120 +304,239 @@ class TransportationProblemDemo:
         return min_cost
     
     def visualize_results(self):
-        """可视化结果"""
+        """可视化结果
+        作用：多维度展示运输网络图、成本热力图、供需分析和路线优化，统一中文标签和样式。
+        规则：figsize统一；网格 alpha=0.3；PNG输出（dpi=300）。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
         
         print("\n📈 生成可视化图表...")
         
-        # 创建子图
-        fig = plt.figure(figsize=(18, 12))
+        # 创建2x3子图布局，展示更全面的运输分析
+        if 'multi_product' in self.results:
+            fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(20, 12))
+        else:
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 10))
         
         if 'basic' in self.results:
             basic = self.results['basic']
             
-            # 1. 运输成本热力图
-            ax1 = plt.subplot(2, 3, 1)
-            # 只显示原始仓库的成本
+            # 1. 运输网络图
+            import networkx as nx
+            G = nx.Graph()
+            
+            # 添加节点
+            factories = basic['factories'][:len(basic['cost_matrix'])]
+            warehouses = basic['original_warehouses']
+            
+            # 工厂节点（红色）
+            for factory in factories:
+                G.add_node(factory, node_type='factory')
+            
+            # 仓库节点（蓝色）
+            for warehouse in warehouses:
+                G.add_node(warehouse, node_type='warehouse')
+            
+            # 添加边（运输路线）
+            for detail in basic['route_details']:
+                if detail['quantity'] > 0:
+                    G.add_edge(detail['from'], detail['to'], 
+                              weight=detail['quantity'], 
+                              cost=detail['unit_cost'])
+            
+            # 绘制网络图
+            pos = {}
+            # 工厂位置（左侧）
+            for i, factory in enumerate(factories):
+                pos[factory] = (0, i * 2)
+            
+            # 仓库位置（右侧）
+            for i, warehouse in enumerate(warehouses):
+                pos[warehouse] = (3, i * 1.5)
+            
+            # 绘制节点
+            factory_nodes = [n for n in G.nodes() if n in factories]
+            warehouse_nodes = [n for n in G.nodes() if n in warehouses]
+            
+            nx.draw_networkx_nodes(G, pos, nodelist=factory_nodes, 
+                                 node_color='#FF6B6B', node_size=800, ax=ax1)
+            nx.draw_networkx_nodes(G, pos, nodelist=warehouse_nodes, 
+                                 node_color='#4ECDC4', node_size=800, ax=ax1)
+            
+            # 绘制边（运输路线）
+            edges = G.edges()
+            weights = [G[u][v]['weight'] for u, v in edges]
+            max_weight = max(weights) if weights else 1
+            
+            for (u, v) in edges:
+                weight = G[u][v]['weight']
+                width = (weight / max_weight) * 5 + 1
+                nx.draw_networkx_edges(G, pos, edgelist=[(u, v)], 
+                                     width=width, alpha=0.7, ax=ax1)
+            
+            # 添加标签
+            nx.draw_networkx_labels(G, pos, font_size=10, ax=ax1)
+            
+            # 添加边标签（运输量）
+            edge_labels = {(u, v): f'{G[u][v]["weight"]:.0f}' for u, v in edges}
+            nx.draw_networkx_edge_labels(G, pos, edge_labels, font_size=8, ax=ax1)
+            
+            ax1.set_title('运输网络图', fontsize=14, fontweight='bold')
+            ax1.axis('off')
+            
+            # 2. 运输成本热力图
             original_cost_matrix = basic['cost_matrix'][:, :len(basic['original_warehouses'])]
-            sns.heatmap(original_cost_matrix, 
-                       xticklabels=basic['original_warehouses'],
-                       yticklabels=basic['factories'][:len(original_cost_matrix)],
-                       annot=True, fmt='d', cmap='YlOrRd', ax=ax1)
-            ax1.set_title('运输成本矩阵 (元/吨)', fontsize=14, fontweight='bold')
+            im2 = ax2.imshow(original_cost_matrix, cmap='YlOrRd', aspect='auto')
             
-            # 2. 运输方案热力图
-            ax2 = plt.subplot(2, 3, 2)
-            # 只显示原始仓库的运输方案
+            # 添加数值标注
+            for i in range(len(factories)):
+                for j in range(len(warehouses)):
+                    if i < len(original_cost_matrix) and j < len(original_cost_matrix[0]):
+                        text = ax2.text(j, i, f'{original_cost_matrix[i, j]:.0f}',
+                                       ha="center", va="center", color="black", fontweight='bold')
+            
+            ax2.set_xticks(range(len(warehouses)))
+            ax2.set_xticklabels(warehouses, rotation=45)
+            ax2.set_yticks(range(len(factories)))
+            ax2.set_yticklabels(factories)
+            ax2.set_title('运输成本热力图 (元/吨)', fontsize=14, fontweight='bold')
+            
+            # 添加颜色条
+            plt.colorbar(im2, ax=ax2, shrink=0.8)
+            
+            # 3. 最优运输方案
             original_solution = basic['solution_matrix'][:len(original_cost_matrix), :len(basic['original_warehouses'])]
-            sns.heatmap(original_solution, 
-                       xticklabels=basic['original_warehouses'],
-                       yticklabels=basic['factories'][:len(original_cost_matrix)],
-                       annot=True, fmt='.1f', cmap='Blues', ax=ax2)
-            ax2.set_title('最优运输方案 (吨)', fontsize=14, fontweight='bold')
+            im3 = ax3.imshow(original_solution, cmap='Blues', aspect='auto')
             
-            # 3. 供需平衡分析
-            ax3 = plt.subplot(2, 3, 3)
-            categories = ['总供应', '总需求']
-            values = [sum(basic['supply'][:len(original_cost_matrix)]), sum(basic['original_demand'])]
-            colors = ['#66B2FF', '#FF9999']
+            # 添加数值标注
+            for i in range(len(factories)):
+                for j in range(len(warehouses)):
+                    if i < len(original_solution) and j < len(original_solution[0]):
+                        if original_solution[i, j] > 0:
+                            text = ax3.text(j, i, f'{original_solution[i, j]:.0f}',
+                                           ha="center", va="center", color="white", fontweight='bold')
             
-            bars = ax3.bar(categories, values, color=colors)
-            ax3.set_title('供需平衡分析', fontsize=14, fontweight='bold')
-            ax3.set_ylabel('数量 (吨)')
-            ax3.grid(True, alpha=0.3)
+            ax3.set_xticks(range(len(warehouses)))
+            ax3.set_xticklabels(warehouses, rotation=45)
+            ax3.set_yticks(range(len(factories)))
+            ax3.set_yticklabels(factories)
+            ax3.set_title('最优运输方案 (吨)', fontsize=14, fontweight='bold')
             
-            for bar, value in zip(bars, values):
-                ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10,
-                        f'{value}', ha='center', va='bottom')
+            # 添加颜色条
+            plt.colorbar(im3, ax=ax3, shrink=0.8)
             
-            # 4. 运输路线成本分析
-            ax4 = plt.subplot(2, 3, 4)
-            if basic['route_details']:
-                route_costs = [detail['total_cost'] for detail in basic['route_details']]
-                route_labels = [f"{detail['from'][:2]}-{detail['to'][:2]}" 
-                               for detail in basic['route_details']]
-                
-                bars = ax4.bar(range(len(route_costs)), route_costs, 
-                              color=plt.cm.Set3(np.linspace(0, 1, len(route_costs))))
-                ax4.set_title('各路线运输成本', fontsize=14, fontweight='bold')
-                ax4.set_ylabel('成本 (元)')
-                ax4.set_xticks(range(len(route_labels)))
-                ax4.set_xticklabels(route_labels, rotation=45)
-                ax4.grid(True, alpha=0.3)
+            # 4. 供需平衡分析
+            supply = basic['supply'][:len(factories)]
+            demand = basic['demand'][:len(warehouses)]
+            
+            x_pos = np.arange(max(len(supply), len(demand)))
+            width = 0.35
+            
+            # 供应量
+            supply_padded = list(supply) + [0] * (len(demand) - len(supply))
+            demand_padded = list(demand) + [0] * (len(supply) - len(demand))
+            
+            bars1 = ax4.bar(x_pos - width/2, supply_padded[:len(x_pos)], width, 
+                           label='供应量', color='#FF9999', alpha=0.8)
+            bars2 = ax4.bar(x_pos + width/2, demand_padded[:len(x_pos)], width, 
+                           label='需求量', color='#99CCFF', alpha=0.8)
+            
+            ax4.set_title('供需平衡分析', fontsize=14, fontweight='bold')
+            ax4.set_ylabel('数量 (吨)')
+            ax4.set_xlabel('节点')
+            ax4.set_xticks(x_pos)
+            labels = factories + warehouses
+            ax4.set_xticklabels(labels[:len(x_pos)], rotation=45)
+            ax4.grid(True, alpha=0.3)
+            ax4.legend()
+            
+            # 添加数值标签
+            for bars in [bars1, bars2]:
+                for bar in bars:
+                    height = bar.get_height()
+                    if height > 0:
+                        ax4.text(bar.get_x() + bar.get_width()/2, height + 5,
+                                f'{height:.0f}', ha='center', va='bottom')
         
         if 'multi_product' in self.results:
             multi = self.results['multi_product']
             
-            # 5. 多产品供需对比
-            ax5 = plt.subplot(2, 3, 5)
-            products = multi['products']
-            supply_totals = [multi['supply_matrix'][:, i].sum() for i in range(len(products))]
-            demand_totals = [multi['demand_matrix'][:, i].sum() for i in range(len(products))]
+            # 5. 多产品运输成本对比
+            product_costs = {}
+            product_quantities = {}
             
-            x_pos = np.arange(len(products))
-            width = 0.35
+            for detail in multi['route_details']:
+                product = detail['product']
+                if product not in product_costs:
+                    product_costs[product] = 0
+                    product_quantities[product] = 0
+                product_costs[product] += detail['total_cost']
+                product_quantities[product] += detail['quantity']
             
-            bars1 = ax5.bar(x_pos - width/2, supply_totals, width, 
-                           label='总供应', color='#87CEEB')
-            bars2 = ax5.bar(x_pos + width/2, demand_totals, width,
-                           label='总需求', color='#FFB6C1')
+            products = list(product_costs.keys())
+            costs = list(product_costs.values())
+            quantities = list(product_quantities.values())
             
-            ax5.set_title('多产品供需对比', fontsize=14, fontweight='bold')
-            ax5.set_ylabel('数量')
-            ax5.set_xticks(x_pos)
-            ax5.set_xticklabels(products)
-            ax5.legend()
+            # 成本对比
+            bars5 = ax5.bar(products, costs, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
+            ax5.set_title('各产品运输成本对比', fontsize=14, fontweight='bold')
+            ax5.set_ylabel('总成本 (元)')
+            ax5.tick_params(axis='x', rotation=45)
             ax5.grid(True, alpha=0.3)
             
-            # 6. 多产品运输成本分布
-            ax6 = plt.subplot(2, 3, 6)
-            if multi['route_details']:
-                product_costs = {}
-                for detail in multi['route_details']:
-                    product = detail['product']
-                    if product not in product_costs:
-                        product_costs[product] = 0
-                    product_costs[product] += detail['total_cost']
+            # 添加成本标签和百分比
+            total_cost = sum(costs)
+            for bar, cost in zip(bars5, costs):
+                percentage = cost / total_cost * 100
+                ax5.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10,
+                        f'{cost:.0f}\n({percentage:.1f}%)', 
+                        ha='center', va='bottom')
+            
+            # 6. 产品运输效率分析
+            efficiency = [cost/qty if qty > 0 else 0 for cost, qty in zip(costs, quantities)]
+            
+            bars6 = ax6.bar(products, efficiency, color=['#32CD32', '#FFD700', '#FF6347'])
+            ax6.set_title('产品运输效率 (元/单位)', fontsize=14, fontweight='bold')
+            ax6.set_ylabel('单位运输成本 (元)')
+            ax6.tick_params(axis='x', rotation=45)
+            ax6.grid(True, alpha=0.3)
+            
+            # 添加效率标签
+            for bar, eff in zip(bars6, efficiency):
+                ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
+                        f'{eff:.2f}', ha='center', va='bottom')
+        else:
+            # 如果没有多产品问题，显示路线成本分析
+            if 'basic' in self.results and len(basic['route_details']) > 0:
+                routes = [f"{r['from']}\n→{r['to']}" for r in basic['route_details']]
+                unit_costs = [r['unit_cost'] for r in basic['route_details']]
+                total_costs = [r['total_cost'] for r in basic['route_details']]
                 
-                products_list = list(product_costs.keys())
-                costs_list = list(product_costs.values())
+                # 路线单位成本
+                bars4_alt = ax4.bar(routes, unit_costs, color='#FF9999', alpha=0.8)
+                ax4.set_title('各路线单位成本', fontsize=14, fontweight='bold')
+                ax4.set_ylabel('单位成本 (元/吨)')
+                ax4.tick_params(axis='x', rotation=45)
+                ax4.grid(True, alpha=0.3)
                 
-                wedges, texts, autotexts = ax6.pie(costs_list, labels=products_list, 
-                                                  autopct='%1.1f%%', startangle=90,
-                                                  colors=['#FF9999', '#66B2FF'])
-                ax6.set_title('各产品运输成本占比', fontsize=14, fontweight='bold')
+                for bar, cost in zip(bars4_alt, unit_costs):
+                    ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.2,
+                            f'{cost:.1f}', ha='center', va='bottom')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/transportation_results.png', 
-                   dpi=300, bbox_inches='tight')
-        plt.show()
+        save_path = os.path.join(BASE_DIR, 'transportation_results.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close(fig)
         
         print("✅ 可视化图表已保存为 'transportation_results.png'")
     
     def cost_sensitivity_analysis(self):
-        """运输成本敏感性分析"""
+        """运输成本敏感性分析
+        作用：在不重新优化的简化前提下评估关键路线成本变化对总成本的影响，作为直觉参考。
+        说明：严谨分析需在成本变动下重新求解模型，这里为教学简化演示。
+        """
         if 'basic' not in self.results:
             print("⚠️ 请先运行基础运输问题求解")
             return
@@ -421,7 +562,10 @@ class TransportationProblemDemo:
                       f"(变化: {estimated_cost_change:+.2f})")
     
     def generate_report(self):
-        """生成详细报告"""
+        """生成详细报告
+        作用：以结构化中文输出总结运输方案、成本统计与优化建议，便于业务决策。
+        规则：条理清晰、教学友好；将技术结果转化为业务可读信息。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
@@ -493,7 +637,10 @@ class TransportationProblemDemo:
         print("="*50)
 
 def main():
-    """主函数"""
+    """主函数
+    作用：按顺序执行基础运输→多产品运输→可视化→敏感性→报告，一键演示完整流程。
+    使用规则：脚本运行时触发；导入为模块时不自动执行。
+    """
     # 创建演示实例
     demo = TransportationProblemDemo()
     
@@ -518,3 +665,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

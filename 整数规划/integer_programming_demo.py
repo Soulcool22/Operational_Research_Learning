@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 说明：本文件演示整数规划（设施选址、背包问题），统一教学风格中文注释与可视化规范。
+# 语法与规则：PuLP二进制变量与线性约束；中文字体配置；PNG输出（dpi=300）。
 """
 整数规划优化演示
 Integer Programming Optimization Demo
@@ -18,12 +22,21 @@ import pulp
 import warnings
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 路径与中文字体：移动到子目录后也能导入根目录的配置
+import os, sys
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class IntegerProgrammingDemo:
-    """整数规划演示类"""
+    """整数规划演示类
+    作用：封装设施选址与背包问题的建模、求解、可视化、情景分析与报告生成。
+    设计：面向对象组织流程；共享结果通过 self.results 以便各方法复用。
+    规则：中文输出、统一图表样式、PNG高分辨率保存。
+    """
     
     def __init__(self):
         self.results = {}
@@ -33,12 +46,15 @@ class IntegerProgrammingDemo:
         print("=" * 50)
     
     def solve_facility_location(self):
-        """
-        整数规划演示 - 设施选址问题
-        
-        问题描述：
-        公司需要在5个候选地点中选择3个建设配送中心，
-        以最小化总成本（建设成本+运营成本）
+        """设施选址问题
+        作用：在候选地点中选择固定数量的设施以最小化总成本（建设+运营），并确保服务能力满足需求。
+        语法要点：
+        - LpProblem(name, LpMinimize)
+        - 二进制变量 y_i ∈ {0,1} 表示是否建设
+        - 目标函数：Σ (建设成本 + 年运营成本×5) · y_i
+        - 约束：选址个数=3；Σ capacity_i · y_i ≥ total_demand
+        原理：整数规划的0/1选址模型；极点最优性与组合选择。
+        规则：中文输出、教学友好、图表统一样式与PNG保存。
         """
         print("\n🏭 设施选址优化问题")
         print("-" * 40)
@@ -134,11 +150,14 @@ class IntegerProgrammingDemo:
         return selected, min_cost
     
     def solve_knapsack_problem(self):
-        """
-        背包问题演示 - 另一个经典整数规划问题
-        
-        问题描述：
-        在有限的背包容量下，选择价值最大的物品组合
+        """背包问题
+        作用：在容量约束下选择价值最大的物品组合，演示0/1整数规划。
+        语法要点：
+        - LpProblem(name, LpMaximize)
+        - 二进制变量 x_i ∈ {0,1}
+        - 目标函数：Σ v_i x_i；约束：Σ w_i x_i ≤ C
+        原理：组合优化的典型问题；价值密度可提供启发式直觉。
+        规则：中文输出、教学友好、图表统一样式与PNG保存。
         """
         print("\n🎒 背包问题演示")
         print("-" * 30)
@@ -209,18 +228,26 @@ class IntegerProgrammingDemo:
         return selected_items, max_value
     
     def visualize_results(self):
-        """可视化结果"""
+        """可视化结果
+        作用：多维度展示选址、成本、背包选择与价值密度分析，统一中文标签和样式。
+        规则：figsize统一；网格 alpha=0.3；PNG输出（dpi=300）。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
         
         print("\n📈 生成可视化图表...")
         
-        # 创建子图
-        fig = plt.figure(figsize=(16, 12))
+        # 设置统一图表样式
+        plt.style.use('seaborn-v0_8')
         
+        # 创建2x3子图布局，展示更全面的分析
+        if 'knapsack' in self.results:
+            fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(18, 12))
+        else:
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+
         # 1. 设施选址结果
-        ax1 = plt.subplot(2, 3, 1)
         colors = ['#FF6B6B' if selected else '#DDD' 
                  for selected in self.results['selected']]
         bars1 = ax1.bar(self.results['locations'], self.results['capacity'], color=colors)
@@ -235,50 +262,57 @@ class IntegerProgrammingDemo:
                 ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 20,
                         '✓', ha='center', va='bottom', fontsize=16, color='red')
         
-        # 2. 成本分析
-        ax2 = plt.subplot(2, 3, 2)
-        selected_locations = [self.results['locations'][i] for i in range(5) 
-                             if self.results['selected'][i]]
-        construction_costs = [self.results['construction_cost'][i] for i in range(5) 
-                             if self.results['selected'][i]]
-        operating_costs = [self.results['operating_cost'][i] * 5 for i in range(5) 
-                          if self.results['selected'][i]]  # 5年运营成本
+        # 2. 成本结构分析
+        selected_indices = [i for i, selected in enumerate(self.results['selected']) if selected]
+        selected_locations = [self.results['locations'][i] for i in selected_indices]
+        construction_costs = [self.results['construction_cost'][i] for i in selected_indices]
+        operating_costs = [self.results['operating_cost'][i] * 5 for i in selected_indices]  # 5年运营成本
         
         x_pos = np.arange(len(selected_locations))
         width = 0.35
         
-        bars2a = ax2.bar(x_pos - width/2, construction_costs, width, 
-                        label='建设成本', color='#FFB6C1')
-        bars2b = ax2.bar(x_pos + width/2, operating_costs, width,
-                        label='5年运营成本', color='#87CEEB')
+        bars2_1 = ax2.bar(x_pos - width/2, construction_costs, width, 
+                         label='建设成本', color='#FF9999', alpha=0.8)
+        bars2_2 = ax2.bar(x_pos + width/2, operating_costs, width, 
+                         label='5年运营成本', color='#99CCFF', alpha=0.8)
         
-        ax2.set_title('选中地点成本分析', fontsize=14, fontweight='bold')
+        ax2.set_title('选中设施成本分析', fontsize=14, fontweight='bold')
         ax2.set_ylabel('成本 (万元)')
         ax2.set_xticks(x_pos)
-        ax2.set_xticklabels(selected_locations)
-        ax2.legend()
+        ax2.set_xticklabels(selected_locations, rotation=45)
         ax2.grid(True, alpha=0.3)
+        ax2.legend()
         
-        # 3. 容量需求对比
-        ax3 = plt.subplot(2, 3, 3)
-        categories = ['总需求', '总供给']
-        values = [self.results['total_demand'], self.results['total_capacity']]
-        colors = ['#FF9999', '#66B2FF']
+        # 添加成本标签
+        for bars in [bars2_1, bars2_2]:
+            for bar in bars:
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2, height + 10,
+                        f'{height:.0f}', ha='center', va='bottom')
         
-        bars3 = ax3.bar(categories, values, color=colors)
-        ax3.set_title('供需平衡分析', fontsize=14, fontweight='bold')
-        ax3.set_ylabel('数量 (万件/年)')
+        # 3. 成本效益分析
+        cost_efficiency = []
+        for i in selected_indices:
+            total_cost = self.results['construction_cost'][i] + 5 * self.results['operating_cost'][i]
+            efficiency = self.results['capacity'][i] / total_cost  # 万件/万元
+            cost_efficiency.append(efficiency)
+        
+        bars3 = ax3.bar(selected_locations, cost_efficiency, 
+                       color=['#32CD32', '#FFD700', '#FF6347'])
+        ax3.set_title('成本效益分析', fontsize=14, fontweight='bold')
+        ax3.set_ylabel('效益 (万件/万元)')
+        ax3.tick_params(axis='x', rotation=45)
         ax3.grid(True, alpha=0.3)
         
-        for bar, value in zip(bars3, values):
-            ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
-                    f'{value}', ha='center', va='bottom')
+        # 添加效益标签
+        for bar, value in zip(bars3, cost_efficiency):
+            ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                    f'{value:.2f}', ha='center', va='bottom')
         
-        # 如果有背包问题结果，显示相关图表
         if 'knapsack' in self.results:
-            # 4. 背包问题 - 物品选择
-            ax4 = plt.subplot(2, 3, 4)
             knapsack = self.results['knapsack']
+            
+            # 4. 背包问题 - 物品选择
             colors = ['#32CD32' if selected else '#DDD' 
                      for selected in knapsack['selected_items']]
             bars4 = ax4.bar(knapsack['items'], knapsack['values'], color=colors)
@@ -293,38 +327,62 @@ class IntegerProgrammingDemo:
                     ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
                             '✓', ha='center', va='bottom', fontsize=16, color='red')
             
-            # 5. 价值密度分析
-            ax5 = plt.subplot(2, 3, 5)
+            # 5. 价值密度对比
             value_density = [v/w for v, w in zip(knapsack['values'], knapsack['weights'])]
-            bars5 = ax5.bar(knapsack['items'], value_density, 
-                           color=['#FFA500' if selected else '#DDD' 
-                                 for selected in knapsack['selected_items']])
-            ax5.set_title('价值密度分析', fontsize=14, fontweight='bold')
+            colors5 = ['#32CD32' if selected else '#DDD' 
+                      for selected in knapsack['selected_items']]
+            
+            bars5 = ax5.bar(knapsack['items'], value_density, color=colors5)
+            ax5.set_title('物品价值密度对比', fontsize=14, fontweight='bold')
             ax5.set_ylabel('价值密度 (元/kg)')
             ax5.tick_params(axis='x', rotation=45)
             ax5.grid(True, alpha=0.3)
             
-            # 6. 重量利用率
-            ax6 = plt.subplot(2, 3, 6)
-            weight_data = ['已用重量', '剩余容量']
-            weight_values = [knapsack['total_weight'], 
-                           knapsack['capacity'] - knapsack['total_weight']]
-            colors = ['#FF6347', '#F0F0F0']
+            # 添加密度标签
+            for bar, value in zip(bars5, value_density):
+                ax5.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
+                        f'{value:.0f}', ha='center', va='bottom')
             
-            wedges, texts, autotexts = ax6.pie(weight_values, labels=weight_data, 
-                                              colors=colors, autopct='%1.1f%%',
-                                              startangle=90)
-            ax6.set_title('背包容量利用率', fontsize=14, fontweight='bold')
+            # 6. 背包容量利用分析
+            selected_weights = [knapsack['weights'][i] for i in range(len(knapsack['items'])) 
+                               if knapsack['selected_items'][i]]
+            selected_values = [knapsack['values'][i] for i in range(len(knapsack['items'])) 
+                              if knapsack['selected_items'][i]]
+            
+            # 饼图显示重量分布
+            if selected_weights:
+                selected_names = [knapsack['items'][i] for i in range(len(knapsack['items'])) 
+                                 if knapsack['selected_items'][i]]
+                colors6 = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFD93D', '#6BCF7F'][:len(selected_weights)]
+                
+                wedges, texts, autotexts = ax6.pie(selected_weights, labels=selected_names, 
+                                                  colors=colors6, autopct='%1.1f%%', startangle=90)
+                ax6.set_title('选中物品重量分布', fontsize=14, fontweight='bold')
+                
+                # 添加总重量信息
+                total_weight = sum(selected_weights)
+                ax6.text(0, -1.3, f'总重量: {total_weight:.1f}kg / {knapsack["capacity"]:.1f}kg', 
+                        ha='center', va='center', fontsize=12, 
+                        bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray"))
+        else:
+            # 如果没有背包问题，显示设施地理分布（简化版）
+            ax4.axis('off')
+            ax4.text(0.5, 0.5, '背包问题未运行', ha='center', va='center', 
+                    transform=ax4.transAxes, fontsize=16)
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/integer_programming_results.png', 
-                   dpi=300, bbox_inches='tight')
-        plt.show()
+        save_path = os.path.join(BASE_DIR, 'integer_programming_results.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close(fig)
         
         print("✅ 可视化图表已保存为 'integer_programming_results.png'")
     
     def scenario_analysis(self):
-        """情景分析"""
+        """情景分析
+        作用：考察需求量变化对选址与成本的影响，输出不同情景下的最优方案与成本。
+        语法要点：重新构建并求解选址模型，参数为不同需求倍数。
+        规则：仅教学用途，保持中文输出与结构化展示。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
@@ -371,7 +429,10 @@ class IntegerProgrammingDemo:
                 print(f"  需求量 {new_demand:.0f} 万件/年: 求解失败")
     
     def generate_report(self):
-        """生成详细报告"""
+        """生成详细报告
+        作用：结构化总结优化目标、关键结果、成本分析与管理建议，便于教学与决策。
+        规则：条理清晰、中文描述、数值格式统一。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
@@ -430,7 +491,10 @@ class IntegerProgrammingDemo:
         print("="*50)
 
 def main():
-    """主函数"""
+    """主函数
+    作用：顺序运行选址、背包、可视化、情景分析与报告。
+    使用规则：脚本运行时触发；导入为模块时不自动执行。
+    """
     # 创建演示实例
     demo = IntegerProgrammingDemo()
     

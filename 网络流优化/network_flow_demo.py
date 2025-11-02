@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 网络流优化演示
 Network Flow Optimization Demo
@@ -20,12 +22,21 @@ from collections import defaultdict
 import warnings
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 路径与中文字体：移动到子目录后也能导入根目录的配置
+import os, sys
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class NetworkFlowDemo:
-    """网络流优化演示类"""
+    """网络流优化演示类
+    作用：封装最大流、最小费用流与最短路径的建模求解、可视化与报告。
+    设计：面向对象组织流程；结果保存在 self.results/self.graphs 以便复用。
+    规则：中文输出、统一可视化样式、PNG高分辨率保存。
+    """
     
     def __init__(self):
         self.results = {}
@@ -36,11 +47,13 @@ class NetworkFlowDemo:
         print("=" * 50)
     
     def solve_max_flow_problem(self):
-        """
-        最大流问题演示 - 供水网络优化
-        
-        问题描述：
-        从水源到各个用户的供水网络，求最大供水量
+        """最大流问题 - 供水网络优化
+        作用：基于有向图与容量约束，计算从源点到汇点的最大流量。
+        语法要点：
+        - 使用 NetworkX 的 maximum_flow (Edmonds–Karp)
+        - 边属性包含 capacity 与 flow，便于可视化展示利用率
+        原理：最大流-最小割定理；瓶颈边决定整体可达流量。
+        规则：中文输出与统一风格；结果存储供后续图表与报告使用。
         """
         print("\n💧 最大流问题 - 供水网络优化")
         print("-" * 40)
@@ -71,7 +84,7 @@ class NetworkFlowDemo:
         for start, end, capacity in edges_capacity:
             print(f"  {start} → {end}: {capacity} 单位/小时")
         
-        # 使用NetworkX求解最大流
+        # 使用NetworkX求解最大流（Edmonds–Karp）
         max_flow_value, max_flow_dict = nx.maximum_flow(G, 'S', 'T')
         
         print(f"\n✅ 最大流结果:")
@@ -119,11 +132,13 @@ class NetworkFlowDemo:
         return max_flow_value, max_flow_dict
     
     def solve_min_cost_flow_problem(self):
-        """
-        最小费用流问题演示 - 物流配送优化
-        
-        问题描述：
-        从多个仓库向多个客户配送货物，最小化配送成本
+        """最小费用流问题 - 物流配送优化
+        作用：在供应与需求约束下，决定各路线流量以最小化总成本。
+        语法要点：
+        - PuLP 非负连续变量 x_{i,j}
+        - 目标函数：Σ cost · x；约束：供应等式、需求等式、容量上限
+        原理：网络流的线性规划形式；影子价格反映路线紧张程度。
+        规则：中文输出、统一样式；结果保存供可视化与报告。
         """
         print("\n🚚 最小费用流问题 - 物流配送优化")
         print("-" * 40)
@@ -227,11 +242,11 @@ class NetworkFlowDemo:
         return min_cost, flow_solution
     
     def solve_shortest_path_problem(self):
-        """
-        最短路径问题演示 - 城市交通网络
-        
-        问题描述：
-        在城市交通网络中寻找从起点到终点的最短路径
+        """最短路径问题 - 城市交通网络
+        作用：计算两点间的最短路径及距离，并统计所有源的最短路径。
+        语法要点：NetworkX shortest_path 与 shortest_path_length；边权为距离 `weight`。
+        原理：最短路径的图论算法；用于交通/通信/物流的路径优化。
+        规则：中文输出，结果保存供可视化。
         """
         print("\n🗺️  最短路径问题 - 城市交通网络")
         print("-" * 40)
@@ -264,6 +279,7 @@ class NetworkFlowDemo:
         
         # 使用Dijkstra算法求最短路径
         shortest_path = nx.shortest_path(G, '起点', '终点', weight='weight')
+        # 计算最短路径与距离（Dijkstra，权重字段为 'weight'）
         shortest_distance = nx.shortest_path_length(G, '起点', '终点', weight='weight')
         
         print(f"\n✅ 最短路径结果:")
@@ -288,7 +304,7 @@ class NetworkFlowDemo:
                   f"(累计: {total_distance} km)")
         
         # 计算所有节点间的最短路径（用于分析网络连通性）
-        all_shortest_paths = dict(nx.all_pairs_shortest_path_length(G, weight='weight'))
+        all_shortest_paths = dict(nx.all_pairs_shortest_path_length(G))
         
         print(f"\n🌐 网络连通性分析:")
         print(f"  网络直径: {nx.diameter(G, weight='weight'):.1f} km")
@@ -309,207 +325,293 @@ class NetworkFlowDemo:
         return shortest_path, shortest_distance
     
     def visualize_results(self):
-        """可视化网络流结果"""
+        """可视化网络流结果
+        作用：多维度展示最大流网络、流量分布、最小费用流、最短路径和网络性能分析，统一中文标签和样式。
+        规则：中文标签、统一样式、网格 alpha=0.3、PNG输出（dpi=300）。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
         
         print("\n📈 生成网络流可视化图表...")
         
-        # 创建子图
-        fig = plt.figure(figsize=(20, 15))
+        # 设置统一图表样式
+        plt.style.use('seaborn-v0_8')
         
-        # 1. 最大流网络图
+        # 创建2x3子图布局，展示更全面的网络流分析
+        fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(20, 12))
+        
+        # 1. 最大流网络图（改进布局）
         if 'max_flow' in self.results:
-            ax1 = plt.subplot(2, 3, 1)
             max_flow_data = self.results['max_flow']
             G = max_flow_data['graph']
             
-            # 设置节点位置
+            # 改进的节点位置布局 - 更清晰的层次结构
             pos = {
-                'S': (0, 1),
-                'A': (1, 1.5),
-                'B': (1, 0.5),
-                'C': (2, 1.5),
-                'D': (2, 0.5),
-                'T': (3, 1)
+                'S': (0, 2),      # 源点居中
+                'A': (2, 3),      # 第一层上方
+                'B': (2, 1),      # 第一层下方
+                'C': (4, 3),      # 第二层上方
+                'D': (4, 1),      # 第二层下方
+                'T': (6, 2)       # 汇点居中
             }
             
-            # 绘制节点
-            nx.draw_networkx_nodes(G, pos, node_color='lightblue', 
-                                 node_size=1000, ax=ax1)
-            nx.draw_networkx_labels(G, pos, font_size=12, ax=ax1)
+            # 绘制节点 - 源汇点特殊标记
+            source_sink = ['S', 'T']
+            intermediate = [n for n in G.nodes() if n not in source_sink]
             
-            # 绘制边，根据流量设置粗细
+            nx.draw_networkx_nodes(G, pos, nodelist=source_sink, 
+                                 node_color='#FF6B6B', node_size=1200, ax=ax1)
+            nx.draw_networkx_nodes(G, pos, nodelist=intermediate, 
+                                 node_color='#4ECDC4', node_size=1000, ax=ax1)
+            nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold', ax=ax1)
+            
+            # 绘制边 - 根据流量设置颜色和粗细
             for start, end in G.edges():
                 flow = max_flow_data['flow_dict'][start][end]
                 capacity = G[start][end]['capacity']
+                
                 if flow > 0:
-                    width = max(1, flow / 5)  # 根据流量调整线宽
+                    # 有流量的边 - 红色，粗细根据流量比例
+                    width = max(2, (flow / capacity) * 8)
+                    alpha = 0.6 + 0.4 * (flow / capacity)
                     nx.draw_networkx_edges(G, pos, [(start, end)], 
-                                         width=width, edge_color='red', ax=ax1)
-                    # 添加流量标签
+                                         width=width, edge_color='red', 
+                                         alpha=alpha, ax=ax1)
+                    
+                    # 流量标签 - 更好的位置和样式
                     x1, y1 = pos[start]
                     x2, y2 = pos[end]
-                    ax1.text((x1+x2)/2, (y1+y2)/2, f'{flow}/{capacity}', 
-                            fontsize=8, ha='center', 
-                            bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8))
+                    mid_x, mid_y = (x1+x2)/2, (y1+y2)/2
+                    
+                    # 根据边的方向调整标签位置
+                    offset_y = 0.15 if y1 == y2 else 0
+                    offset_x = 0.15 if x1 == x2 else 0
+                    
+                    ax1.text(mid_x + offset_x, mid_y + offset_y, 
+                            f'{flow}/{capacity}', 
+                            fontsize=9, ha='center', va='center',
+                            bbox=dict(boxstyle='round,pad=0.3', 
+                                    facecolor='white', alpha=0.9, edgecolor='red'))
                 else:
+                    # 无流量的边 - 灰色虚线
                     nx.draw_networkx_edges(G, pos, [(start, end)], 
                                          width=1, edge_color='gray', 
-                                         style='dashed', ax=ax1)
+                                         style='dashed', alpha=0.5, ax=ax1)
             
-            ax1.set_title(f'最大流网络 (最大流量: {max_flow_data["max_flow_value"]})', 
+            ax1.set_title(f'最大流网络图\n最大流量: {max_flow_data["max_flow_value"]} 单位/小时', 
                          fontsize=14, fontweight='bold')
             ax1.axis('off')
-        
-        # 2. 最大流边利用率
-        if 'max_flow' in self.results:
-            ax2 = plt.subplot(2, 3, 2)
-            flow_details = max_flow_data['flow_details']
             
-            edges = [f"{detail['from']}-{detail['to']}" for detail in flow_details]
-            utilizations = [detail['utilization'] for detail in flow_details]
+            # 2. 边流量利用率分析
+            edges = list(G.edges())
+            utilization_rates = []
+            edge_labels = []
             
-            colors = ['red' if u >= 99.9 else 'orange' if u >= 80 else 'green' 
-                     for u in utilizations]
+            for start, end in edges:
+                flow = max_flow_data['flow_dict'][start][end]
+                capacity = G[start][end]['capacity']
+                utilization = (flow / capacity) * 100 if capacity > 0 else 0
+                utilization_rates.append(utilization)
+                edge_labels.append(f'{start}→{end}')
             
-            bars = ax2.bar(range(len(edges)), utilizations, color=colors)
-            ax2.set_title('边容量利用率', fontsize=14, fontweight='bold')
+            colors = ['#FF6B6B' if rate > 80 else '#FFD93D' if rate > 50 else '#4ECDC4' 
+                     for rate in utilization_rates]
+            
+            bars2 = ax2.bar(range(len(edges)), utilization_rates, color=colors)
+            ax2.set_title('边流量利用率分析', fontsize=14, fontweight='bold')
             ax2.set_ylabel('利用率 (%)')
+            ax2.set_xlabel('边')
             ax2.set_xticks(range(len(edges)))
-            ax2.set_xticklabels(edges, rotation=45)
+            ax2.set_xticklabels(edge_labels, rotation=45)
             ax2.grid(True, alpha=0.3)
-            ax2.axhline(y=100, color='red', linestyle='--', alpha=0.7)
+            ax2.axhline(y=100, color='red', linestyle='--', alpha=0.7, label='满负荷')
+            ax2.legend()
+            
+            # 添加利用率标签
+            for bar, rate in zip(bars2, utilization_rates):
+                ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
+                        f'{rate:.1f}%', ha='center', va='bottom')
         
-        # 3. 最小费用流成本分析
+        # 3. 最小费用流网络
         if 'min_cost_flow' in self.results:
-            ax3 = plt.subplot(2, 3, 3)
             mcf_data = self.results['min_cost_flow']
             
-            if mcf_data['cost_details']:
-                routes = [f"{detail['from'][:2]}-{detail['to'][:2]}" 
-                         for detail in mcf_data['cost_details']]
-                costs = [detail['total_cost'] for detail in mcf_data['cost_details']]
-                
-                bars = ax3.bar(range(len(routes)), costs, 
-                              color=plt.cm.Set3(np.linspace(0, 1, len(routes))))
-                ax3.set_title('各路线运输成本', fontsize=14, fontweight='bold')
-                ax3.set_ylabel('成本 (元)')
-                ax3.set_xticks(range(len(routes)))
-                ax3.set_xticklabels(routes, rotation=45)
-                ax3.grid(True, alpha=0.3)
-        
-        # 4. 最短路径网络图
-        if 'shortest_path' in self.results:
-            ax4 = plt.subplot(2, 3, 4)
-            sp_data = self.results['shortest_path']
-            G = sp_data['graph']
+            # 创建图结构用于可视化
+            G_mcf = nx.DiGraph()
             
-            # 使用spring布局
-            pos = nx.spring_layout(G, seed=42)
+            # 添加节点
+            warehouses = mcf_data['warehouses']
+            customers = mcf_data['customers']
+            G_mcf.add_nodes_from(warehouses)
+            G_mcf.add_nodes_from(customers)
+            
+            # 添加边和成本信息
+            for start, end, cost, capacity in mcf_data['transport_data']:
+                G_mcf.add_edge(start, end, cost=cost, capacity=capacity)
+            
+            # 使用改进的布局
+            pos_mcf = nx.spring_layout(G_mcf, k=2, iterations=50, seed=42)
+            
+            # 绘制节点 - 仓库和客户区分颜色
+            nx.draw_networkx_nodes(G_mcf, pos_mcf, nodelist=warehouses,
+                                 node_color='#FF6B6B', node_size=1000, ax=ax3)
+            nx.draw_networkx_nodes(G_mcf, pos_mcf, nodelist=customers,
+                                 node_color='#4ECDC4', node_size=800, ax=ax3)
+            nx.draw_networkx_labels(G_mcf, pos_mcf, font_size=10, ax=ax3)
+            
+            # 绘制边 - 根据成本设置颜色
+            edges_mcf = G_mcf.edges()
+            costs = [G_mcf[u][v]['cost'] for u, v in edges_mcf]
+            max_cost = max(costs) if costs else 1
+            
+            for (u, v) in edges_mcf:
+                cost = G_mcf[u][v]['cost']
+                # 成本越高颜色越红
+                color_intensity = cost / max_cost
+                color = plt.cm.Reds(0.3 + 0.7 * color_intensity)
+                
+                # 检查是否有流量
+                flow = mcf_data['flow_solution'].get((u, v), 0)
+                width = 3 if flow > 0 else 1
+                alpha = 1.0 if flow > 0 else 0.5
+                
+                nx.draw_networkx_edges(G_mcf, pos_mcf, [(u, v)], 
+                                     edge_color=[color], width=width, alpha=alpha, ax=ax3)
+            
+            # 添加成本标签
+            edge_labels_mcf = {(u, v): f'{G_mcf[u][v]["cost"]}' for u, v in edges_mcf}
+            nx.draw_networkx_edge_labels(G_mcf, pos_mcf, edge_labels_mcf, 
+                                       font_size=8, ax=ax3)
+            
+            ax3.set_title(f'最小费用流网络\n最小成本: {mcf_data["min_cost"]:.0f} 元', 
+                         fontsize=14, fontweight='bold')
+            ax3.axis('off')
+        
+        # 4. 最短路径网络（改进布局）
+        if 'shortest_path' in self.results:
+            sp_data = self.results['shortest_path']
+            G_sp = sp_data['graph']
+            
+            # 使用更好的布局算法
+            pos_sp = nx.kamada_kawai_layout(G_sp)
             
             # 绘制所有边
-            nx.draw_networkx_edges(G, pos, edge_color='lightgray', ax=ax4)
+            nx.draw_networkx_edges(G_sp, pos_sp, edge_color='lightgray', 
+                                 width=1, alpha=0.5, ax=ax4)
             
             # 高亮最短路径
             shortest_path = sp_data['shortest_path']
             path_edges = [(shortest_path[i], shortest_path[i+1]) 
                          for i in range(len(shortest_path)-1)]
-            nx.draw_networkx_edges(G, pos, path_edges, 
-                                 edge_color='red', width=3, ax=ax4)
             
-            # 绘制节点
-            node_colors = ['red' if node in shortest_path else 'lightblue' 
-                          for node in G.nodes()]
-            nx.draw_networkx_nodes(G, pos, node_color=node_colors, 
-                                 node_size=800, ax=ax4)
-            nx.draw_networkx_labels(G, pos, font_size=10, ax=ax4)
+            # 绘制最短路径 - 渐变效果
+            for i, (u, v) in enumerate(path_edges):
+                color_intensity = 1 - (i / len(path_edges)) * 0.5
+                nx.draw_networkx_edges(G_sp, pos_sp, [(u, v)], 
+                                     edge_color='red', width=4, 
+                                     alpha=color_intensity, ax=ax4)
             
-            # 添加边权重标签
-            edge_labels = nx.get_edge_attributes(G, 'weight')
-            nx.draw_networkx_edge_labels(G, pos, edge_labels, font_size=8, ax=ax4)
+            # 绘制节点 - 路径上的节点特殊标记
+            path_nodes = set(shortest_path)
+            other_nodes = [n for n in G_sp.nodes() if n not in path_nodes]
             
-            ax4.set_title(f'最短路径 (距离: {sp_data["shortest_distance"]} km)', 
+            nx.draw_networkx_nodes(G_sp, pos_sp, nodelist=list(path_nodes), 
+                                 node_color='#FF6B6B', node_size=900, ax=ax4)
+            nx.draw_networkx_nodes(G_sp, pos_sp, nodelist=other_nodes, 
+                                 node_color='lightblue', node_size=600, ax=ax4)
+            nx.draw_networkx_labels(G_sp, pos_sp, font_size=10, ax=ax4)
+            
+            # 添加距离标签
+            edge_labels_sp = nx.get_edge_attributes(G_sp, 'weight')
+            nx.draw_networkx_edge_labels(G_sp, pos_sp, edge_labels_sp, 
+                                       font_size=8, ax=ax4)
+            
+            ax4.set_title(f'最短路径网络\n最短距离: {sp_data["shortest_distance"]} km', 
                          fontsize=14, fontweight='bold')
             ax4.axis('off')
         
-        # 5. 供需平衡分析（最小费用流）
-        if 'min_cost_flow' in self.results:
-            ax5 = plt.subplot(2, 3, 5)
-            mcf_data = self.results['min_cost_flow']
+        # 5. 网络性能指标对比
+        if self.results:
+            metrics = []
+            values = []
             
-            # 仓库供应量
-            warehouses = list(mcf_data['supply'].keys())
-            supply_values = list(mcf_data['supply'].values())
+            if 'max_flow' in self.results:
+                metrics.append('最大流量')
+                values.append(self.results['max_flow']['max_flow_value'])
             
-            # 客户需求量
-            customers = list(mcf_data['demand'].keys())
-            demand_values = list(mcf_data['demand'].values())
+            if 'min_cost_flow' in self.results:
+                metrics.append('最小成本')
+                values.append(self.results['min_cost_flow']['min_cost'])
             
-            x_pos = np.arange(max(len(warehouses), len(customers)))
+            if 'shortest_path' in self.results:
+                metrics.append('最短距离')
+                values.append(self.results['shortest_path']['shortest_distance'])
+            
+            if metrics:
+                # 标准化数值以便比较
+                normalized_values = [(v / max(values)) * 100 for v in values]
+                colors_metrics = ['#FF6B6B', '#4ECDC4', '#45B7D1'][:len(metrics)]
+                
+                bars5 = ax5.bar(metrics, normalized_values, color=colors_metrics)
+                ax5.set_title('网络性能指标对比\n(标准化至100%)', fontsize=14, fontweight='bold')
+                ax5.set_ylabel('标准化值 (%)')
+                ax5.tick_params(axis='x', rotation=45)
+                ax5.grid(True, alpha=0.3)
+                
+                # 添加原始数值标签
+                for bar, original_val, norm_val in zip(bars5, values, normalized_values):
+                    ax5.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
+                            f'{original_val}\n({norm_val:.1f}%)', 
+                            ha='center', va='bottom')
+        
+        # 6. 网络拓扑分析
+        if 'max_flow' in self.results:
+            G_topo = self.results['max_flow']['graph']
+            
+            # 计算网络拓扑指标
+            degree_centrality = nx.degree_centrality(G_topo)
+            betweenness_centrality = nx.betweenness_centrality(G_topo)
+            
+            nodes = list(G_topo.nodes())
+            degree_values = [degree_centrality[node] * 100 for node in nodes]
+            betweenness_values = [betweenness_centrality[node] * 100 for node in nodes]
+            
+            x_pos = np.arange(len(nodes))
             width = 0.35
             
-            # 供应量柱状图
-            ax5.bar(x_pos[:len(warehouses)] - width/2, supply_values, width, 
-                   label='供应量', color='#87CEEB')
+            bars6_1 = ax6.bar(x_pos - width/2, degree_values, width, 
+                             label='度中心性', color='#FF9999', alpha=0.8)
+            bars6_2 = ax6.bar(x_pos + width/2, betweenness_values, width, 
+                             label='介数中心性', color='#99CCFF', alpha=0.8)
             
-            # 需求量柱状图
-            ax5.bar(x_pos[:len(customers)] + width/2, demand_values, width,
-                   label='需求量', color='#FFB6C1')
-            
-            ax5.set_title('供需平衡分析', fontsize=14, fontweight='bold')
-            ax5.set_ylabel('数量')
-            ax5.set_xticks(x_pos)
-            ax5.set_xticklabels([f'节点{i+1}' for i in range(len(x_pos))])
-            ax5.legend()
-            ax5.grid(True, alpha=0.3)
-        
-        # 6. 网络性能对比
-        ax6 = plt.subplot(2, 3, 6)
-        
-        # 收集各种网络问题的关键指标
-        metrics = []
-        values = []
-        
-        if 'max_flow' in self.results:
-            metrics.append('最大流量')
-            values.append(self.results['max_flow']['max_flow_value'])
-        
-        if 'min_cost_flow' in self.results:
-            metrics.append('最小成本')
-            values.append(self.results['min_cost_flow']['min_cost'])
-        
-        if 'shortest_path' in self.results:
-            metrics.append('最短距离')
-            values.append(self.results['shortest_path']['shortest_distance'])
-        
-        if metrics:
-            # 标准化数值以便比较
-            normalized_values = [v/max(values) * 100 for v in values]
-            
-            bars = ax6.bar(range(len(metrics)), normalized_values, 
-                          color=['#FF9999', '#66B2FF', '#99FF99'][:len(metrics)])
-            ax6.set_title('网络优化指标对比', fontsize=14, fontweight='bold')
-            ax6.set_ylabel('标准化值 (%)')
-            ax6.set_xticks(range(len(metrics)))
-            ax6.set_xticklabels(metrics, rotation=45)
+            ax6.set_title('节点重要性分析', fontsize=14, fontweight='bold')
+            ax6.set_ylabel('中心性 (%)')
+            ax6.set_xlabel('节点')
+            ax6.set_xticks(x_pos)
+            ax6.set_xticklabels(nodes)
             ax6.grid(True, alpha=0.3)
+            ax6.legend()
             
-            # 添加实际数值标签
-            for bar, value in zip(bars, values):
-                ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
-                        f'{value:.1f}', ha='center', va='bottom')
+            # 添加数值标签
+            for bars in [bars6_1, bars6_2]:
+                for bar in bars:
+                    height = bar.get_height()
+                    ax6.text(bar.get_x() + bar.get_width()/2, height + 1,
+                            f'{height:.1f}', ha='center', va='bottom', fontsize=8)
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/network_flow_results.png', 
-                   dpi=300, bbox_inches='tight')
-        plt.show()
+        save_path = os.path.join(BASE_DIR, 'network_flow_results.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close(fig)
         
         print("✅ 网络流可视化图表已保存为 'network_flow_results.png'")
     
     def network_analysis(self):
-        """网络结构分析"""
+        """网络结构分析
+        作用：输出节点数、边数、密度、连通性等指标，并给出业务解读与建议。
+        规则：中文输出、结构化信息。
+        """
         if not self.graphs:
             print("⚠️ 请先运行求解方法")
             return
@@ -532,7 +634,10 @@ class NetworkFlowDemo:
                 print(f"  • 网络连通性: 非连通")
     
     def generate_report(self):
-        """生成详细报告"""
+        """生成详细报告
+        作用：结构化总结最大流、最小费用流与最短路径的关键结果与管理建议。
+        规则：条理清晰、教学友好；将技术结果转化为业务可读信息。
+        """
         if not self.results:
             print("⚠️ 请先运行求解方法")
             return
@@ -586,7 +691,10 @@ class NetworkFlowDemo:
         print("="*50)
 
 def main():
-    """主函数"""
+    """主函数
+    作用：按顺序执行最大流→最小费用流→最短路径→可视化→分析→报告，一键演示完整流程。
+    使用规则：脚本运行时触发；导入为模块时不自动执行。
+    """
     # 创建演示实例
     demo = NetworkFlowDemo()
     

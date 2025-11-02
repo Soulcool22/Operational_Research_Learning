@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 说明：本文件演示优化算法的可视化，包括线性规划可行域、梯度下降过程动画、网络流图形展示、敏感性分析与3D优化表面。
+# 语法与规则：使用Matplotlib/Seaborn绘制图表；中文标签需加载字体；统一PNG输出规范。
 """
 运筹学优化可视化演示
 Operations Research Optimization Visualization Demo
@@ -18,22 +22,41 @@ import networkx as nx
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 import warnings
+# 抑制非关键警告，保证教学输出清爽
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 路径与中文字体：移动到子目录后也能导入根目录的配置
+import os, sys
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+from font_config import setup_chinese_font
+
+# 先设置样式，再设置中文字体（避免样式覆盖字体设置）
 plt.style.use('seaborn-v0_8')
+setup_chinese_font()
 
 class OptimizationVisualization:
-    """优化可视化演示类"""
+    """优化可视化演示类
+    作用：封装五类可视化——线性规划可行域、梯度下降过程动画、网络流展示、敏感性分析与三维优化表面。
+    设计：面向对象组织流程；统一输出样式与PNG文件保存规则；入口集中在 main()。
+    """
     
     def __init__(self):
         print("🎨 运筹学优化可视化演示系统")
         print("=" * 50)
+        # 确保字体配置正确应用
+        setup_chinese_font()
     
     def linear_programming_feasible_region(self):
-        """线性规划可行域可视化"""
+        """线性规划可行域可视化
+        作用：绘制二维线性约束的可行域与目标等值线，直观展示最优解位置与极点特性。
+        语法要点：
+        - 使用 `contourf`/`fill_between` 表示不等式约束的有效区域
+        - 使用等利润线（目标函数等值线）帮助理解优化方向
+        规则：中文标签、统一样式、PNG输出（dpi=300）。
+        """
         print("\n📐 1. 线性规划可行域可视化")
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
@@ -79,9 +102,9 @@ class OptimizationVisualization:
         
         ax1.set_xlim(0, 8)
         ax1.set_ylim(0, 6)
-        ax1.set_xlabel('x₁')
-        ax1.set_ylabel('x₂')
-        ax1.set_title('线性规划可行域\nmax 3x₁ + 2x₂', fontweight='bold')
+        ax1.set_xlabel('$x_1$')
+        ax1.set_ylabel('$x_2$')
+        ax1.set_title('线性规划可行域\nmax $3x_1 + 2x_2$', fontweight='bold')
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
@@ -101,7 +124,7 @@ class OptimizationVisualization:
             if A[i, 1] != 0:
                 y_constraint = (b[i] - A[i, 0] * x) / A[i, 1]
                 ax2.plot(x, y_constraint, color=colors[i], linewidth=2,
-                        label=f'{A[i,0]:.1f}x₁ + {A[i,1]:.1f}x₂ ≤ {b[i]:.1f}')
+                        label=f'{A[i,0]:.1f}$x_1$ + {A[i,1]:.1f}$x_2$ ≤ {b[i]:.1f}')
         
         # 计算可行域（简化）
         feasible_complex = np.ones_like(X, dtype=bool)
@@ -114,19 +137,25 @@ class OptimizationVisualization:
         
         ax2.set_xlim(0, 10)
         ax2.set_ylim(0, 10)
-        ax2.set_xlabel('x₁')
-        ax2.set_ylabel('x₂')
+        ax2.set_xlabel('$x_1$')
+        ax2.set_ylabel('$x_2$')
         ax2.set_title('复杂约束可行域', fontweight='bold')
         ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         ax2.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/feasible_region.png', 
-                   dpi=300, bbox_inches='tight')
+        save_path = os.path.join(BASE_DIR, 'feasible_region.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
     
     def optimization_process_animation(self):
-        """优化过程动态演示"""
+        """优化过程动态演示
+        作用：以动画或轨迹图展示梯度下降在二维函数上的迭代路径，帮助理解学习率与收敛过程。
+        语法要点：
+        - 使用 `matplotlib.animation.FuncAnimation` 或逐帧绘制更新点位
+        - 函数等高线与迭代路径同时呈现
+        规则：中文标签、统一样式、PNG输出（dpi=300），教学友好。
+        """
         print("\n🎬 2. 梯度下降优化过程动画")
         
         # 定义目标函数 f(x,y) = (x-3)² + (y-2)²
@@ -189,8 +218,8 @@ class OptimizationVisualization:
         ax.legend()
         ax.grid(True, alpha=0.3)
         
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/optimization_process.png', 
-                   dpi=300, bbox_inches='tight')
+        save_path = os.path.join(BASE_DIR, 'optimization_process.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
         
         print(f"✅ 优化完成，共迭代 {len(path_x)-1} 次")
@@ -198,7 +227,13 @@ class OptimizationVisualization:
         print(f"   目标函数值: {objective_function(current_x, current_y):.6f}")
     
     def network_flow_visualization(self):
-        """网络流可视化"""
+        """网络流可视化
+        作用：绘制供应-中转-需求三层网络结构与最大流结果，线宽表示流量，标签显示流量/容量。
+        语法要点：
+        - 使用 NetworkX 构建有向图并设置 `capacity`/`flow` 属性
+        - 自定义布局保证教学可读性，边标签显示 `flow/capacity`
+        规则：中文标签、统一样式、PNG输出（dpi=300）。
+        """
         print("\n🌐 3. 网络流优化可视化")
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
@@ -286,8 +321,8 @@ class OptimizationVisualization:
                    ha='center', fontsize=12, fontweight='bold')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/network_flow.png', 
-                   dpi=300, bbox_inches='tight')
+        save_path = os.path.join(BASE_DIR, 'network_flow.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
     
     def sensitivity_analysis(self):
@@ -367,8 +402,8 @@ class OptimizationVisualization:
         ax4.set_title('参数稳定性区间\n(相对于基准值)', fontweight='bold')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/sensitivity_analysis.png', 
-                   dpi=300, bbox_inches='tight')
+        save_path = os.path.join(BASE_DIR, 'sensitivity_analysis.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
     
     def three_dimensional_optimization(self):
@@ -393,9 +428,9 @@ class OptimizationVisualization:
         # 标记全局最优解
         ax1.scatter([1], [1], [0], color='red', s=100, label='全局最优')
         
-        ax1.set_xlabel('x₁')
-        ax1.set_ylabel('x₂')
-        ax1.set_zlabel('f(x₁, x₂)')
+        ax1.set_xlabel('$x_1$')
+        ax1.set_ylabel('$x_2$')
+        ax1.set_zlabel('$f(x_1, x_2)$')
         ax1.set_title('Rosenbrock函数\n(经典优化测试函数)', fontweight='bold')
         
         # 2. 多峰函数
@@ -409,9 +444,9 @@ class OptimizationVisualization:
         surf2 = ax2.plot_surface(X, Y, Z2, cmap='plasma', alpha=0.8)
         ax2.contour(X, Y, Z2, zdir='z', offset=0, cmap='plasma', alpha=0.5)
         
-        ax2.set_xlabel('x₁')
-        ax2.set_ylabel('x₂')
-        ax2.set_zlabel('f(x₁, x₂)')
+        ax2.set_xlabel('$x_1$')
+        ax2.set_ylabel('$x_2$')
+        ax2.set_zlabel('$f(x_1, x_2)$')
         ax2.set_title('Ackley函数\n(多峰优化问题)', fontweight='bold')
         
         # 3. 约束优化问题
@@ -433,10 +468,10 @@ class OptimizationVisualization:
         z_circle = x_circle**2 + y_circle**2
         ax3.plot(x_circle, y_circle, z_circle, 'r-', linewidth=3, label='约束边界')
         
-        ax3.set_xlabel('x₁')
-        ax3.set_ylabel('x₂')
-        ax3.set_zlabel('f(x₁, x₂)')
-        ax3.set_title('约束优化问题\nmin x₁² + x₂²', fontweight='bold')
+        ax3.set_xlabel('$x_1$')
+        ax3.set_ylabel('$x_2$')
+        ax3.set_zlabel('$f(x_1, x_2)$')
+        ax3.set_title('约束优化问题\nmin $x_1^2 + x_2^2$', fontweight='bold')
         
         # 4. 帕累托前沿（多目标优化）
         ax4 = fig.add_subplot(2, 2, 4, projection='3d')
@@ -471,8 +506,8 @@ class OptimizationVisualization:
         ax4.legend()
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/3d_optimization.png', 
-                   dpi=300, bbox_inches='tight')
+        save_path = os.path.join(BASE_DIR, '3d_optimization.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
     
     def algorithm_comparison_dashboard(self):
@@ -576,12 +611,15 @@ class OptimizationVisualization:
         ax4.grid(True, alpha=0.3, axis='y')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/algorithm_comparison.png', 
-                   dpi=300, bbox_inches='tight')
+        save_path = os.path.join(BASE_DIR, 'algorithm_comparison.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
 
 def main():
-    """主函数"""
+    """主函数
+    作用：顺序运行所有可视化方法并保存PNG输出，作为教学演示的一键入口。
+    使用规则：脚本运行时触发；导入为模块时不自动执行。
+    """
     viz = OptimizationVisualization()
     
     print("开始生成运筹学优化可视化演示...")
