@@ -21,9 +21,9 @@ from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 使用自定义字体配置支持中文
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 random.seed(42)
 np.random.seed(42)
@@ -617,7 +617,7 @@ class LargeScaleOptimization:
             ax6.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/large_scale_results.png', 
+        plt.savefig('large_scale_results.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
         

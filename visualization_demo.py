@@ -20,10 +20,12 @@ from matplotlib.animation import FuncAnimation
 import warnings
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 使用自定义字体配置支持中文
+from font_config import setup_chinese_font
+
+# 先设置样式，再设置中文字体（避免样式覆盖字体设置）
 plt.style.use('seaborn-v0_8')
+setup_chinese_font()
 
 class OptimizationVisualization:
     """优化可视化演示类"""
@@ -31,6 +33,8 @@ class OptimizationVisualization:
     def __init__(self):
         print("🎨 运筹学优化可视化演示系统")
         print("=" * 50)
+        # 确保字体配置正确应用
+        setup_chinese_font()
     
     def linear_programming_feasible_region(self):
         """线性规划可行域可视化"""
@@ -79,9 +83,9 @@ class OptimizationVisualization:
         
         ax1.set_xlim(0, 8)
         ax1.set_ylim(0, 6)
-        ax1.set_xlabel('x₁')
-        ax1.set_ylabel('x₂')
-        ax1.set_title('线性规划可行域\nmax 3x₁ + 2x₂', fontweight='bold')
+        ax1.set_xlabel('$x_1$')
+        ax1.set_ylabel('$x_2$')
+        ax1.set_title('线性规划可行域\nmax $3x_1 + 2x_2$', fontweight='bold')
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
@@ -101,7 +105,7 @@ class OptimizationVisualization:
             if A[i, 1] != 0:
                 y_constraint = (b[i] - A[i, 0] * x) / A[i, 1]
                 ax2.plot(x, y_constraint, color=colors[i], linewidth=2,
-                        label=f'{A[i,0]:.1f}x₁ + {A[i,1]:.1f}x₂ ≤ {b[i]:.1f}')
+                        label=f'{A[i,0]:.1f}$x_1$ + {A[i,1]:.1f}$x_2$ ≤ {b[i]:.1f}')
         
         # 计算可行域（简化）
         feasible_complex = np.ones_like(X, dtype=bool)
@@ -114,14 +118,14 @@ class OptimizationVisualization:
         
         ax2.set_xlim(0, 10)
         ax2.set_ylim(0, 10)
-        ax2.set_xlabel('x₁')
-        ax2.set_ylabel('x₂')
+        ax2.set_xlabel('$x_1$')
+        ax2.set_ylabel('$x_2$')
         ax2.set_title('复杂约束可行域', fontweight='bold')
         ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         ax2.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/feasible_region.png', 
+        plt.savefig('feasible_region.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
     
@@ -189,7 +193,7 @@ class OptimizationVisualization:
         ax.legend()
         ax.grid(True, alpha=0.3)
         
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/optimization_process.png', 
+        plt.savefig('optimization_process.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
         
@@ -286,7 +290,7 @@ class OptimizationVisualization:
                    ha='center', fontsize=12, fontweight='bold')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/network_flow.png', 
+        plt.savefig('network_flow.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
     
@@ -367,7 +371,7 @@ class OptimizationVisualization:
         ax4.set_title('参数稳定性区间\n(相对于基准值)', fontweight='bold')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/sensitivity_analysis.png', 
+        plt.savefig('sensitivity_analysis.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
     
@@ -393,9 +397,9 @@ class OptimizationVisualization:
         # 标记全局最优解
         ax1.scatter([1], [1], [0], color='red', s=100, label='全局最优')
         
-        ax1.set_xlabel('x₁')
-        ax1.set_ylabel('x₂')
-        ax1.set_zlabel('f(x₁, x₂)')
+        ax1.set_xlabel('$x_1$')
+        ax1.set_ylabel('$x_2$')
+        ax1.set_zlabel('$f(x_1, x_2)$')
         ax1.set_title('Rosenbrock函数\n(经典优化测试函数)', fontweight='bold')
         
         # 2. 多峰函数
@@ -409,9 +413,9 @@ class OptimizationVisualization:
         surf2 = ax2.plot_surface(X, Y, Z2, cmap='plasma', alpha=0.8)
         ax2.contour(X, Y, Z2, zdir='z', offset=0, cmap='plasma', alpha=0.5)
         
-        ax2.set_xlabel('x₁')
-        ax2.set_ylabel('x₂')
-        ax2.set_zlabel('f(x₁, x₂)')
+        ax2.set_xlabel('$x_1$')
+        ax2.set_ylabel('$x_2$')
+        ax2.set_zlabel('$f(x_1, x_2)$')
         ax2.set_title('Ackley函数\n(多峰优化问题)', fontweight='bold')
         
         # 3. 约束优化问题
@@ -433,10 +437,10 @@ class OptimizationVisualization:
         z_circle = x_circle**2 + y_circle**2
         ax3.plot(x_circle, y_circle, z_circle, 'r-', linewidth=3, label='约束边界')
         
-        ax3.set_xlabel('x₁')
-        ax3.set_ylabel('x₂')
-        ax3.set_zlabel('f(x₁, x₂)')
-        ax3.set_title('约束优化问题\nmin x₁² + x₂²', fontweight='bold')
+        ax3.set_xlabel('$x_1$')
+        ax3.set_ylabel('$x_2$')
+        ax3.set_zlabel('$f(x_1, x_2)$')
+        ax3.set_title('约束优化问题\nmin $x_1^2 + x_2^2$', fontweight='bold')
         
         # 4. 帕累托前沿（多目标优化）
         ax4 = fig.add_subplot(2, 2, 4, projection='3d')
@@ -471,7 +475,7 @@ class OptimizationVisualization:
         ax4.legend()
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/3d_optimization.png', 
+        plt.savefig('3d_optimization.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
     
@@ -576,7 +580,7 @@ class OptimizationVisualization:
         ax4.grid(True, alpha=0.3, axis='y')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/algorithm_comparison.png', 
+        plt.savefig('algorithm_comparison.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
 

@@ -29,9 +29,9 @@ except ImportError as e:
     print("请确保所有演示文件都在同一目录下")
     sys.exit(1)
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 使用自定义字体配置支持中文
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class OperationsResearchMainDemo:
     """运筹学优化主演示类"""

@@ -20,9 +20,9 @@ from collections import defaultdict
 import warnings
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 使用自定义字体配置支持中文
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class NetworkFlowDemo:
     """网络流优化演示类"""
@@ -288,7 +288,7 @@ class NetworkFlowDemo:
                   f"(累计: {total_distance} km)")
         
         # 计算所有节点间的最短路径（用于分析网络连通性）
-        all_shortest_paths = dict(nx.all_pairs_shortest_path_length(G, weight='weight'))
+        all_shortest_paths = dict(nx.all_pairs_shortest_path_length(G))
         
         print(f"\n🌐 网络连通性分析:")
         print(f"  网络直径: {nx.diameter(G, weight='weight'):.1f} km")
@@ -502,7 +502,7 @@ class NetworkFlowDemo:
                         f'{value:.1f}', ha='center', va='bottom')
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/network_flow_results.png', 
+        plt.savefig('network_flow_results.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
         

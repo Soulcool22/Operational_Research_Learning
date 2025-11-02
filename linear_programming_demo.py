@@ -18,9 +18,9 @@ import pulp
 import warnings
 warnings.filterwarnings('ignore')
 
-# 使用zhplot支持中文
-import zhplot
-zhplot.matplotlib_chineseize()
+# 使用自定义字体配置支持中文
+from font_config import setup_chinese_font
+setup_chinese_font()
 
 class LinearProgrammingDemo:
     """线性规划演示类"""
@@ -179,7 +179,7 @@ class LinearProgrammingDemo:
         ax4.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('c:/Users/soulc/Desktop/我的/or/linear_programming_results.png', 
+        plt.savefig('linear_programming_results.png', 
                    dpi=300, bbox_inches='tight')
         plt.show()
         
