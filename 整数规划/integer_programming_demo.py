@@ -109,7 +109,7 @@ class IntegerProgrammingDemo:
         selected = [int(y[i].varValue) for i in range(5)]
         min_cost = pulp.value(prob.objective)
         
-        print(f"\n✅ 最优选址方案:")
+print(f"\n最优选址方案：")
         selected_locations = []
         total_capacity = 0
         selected_details = []
@@ -127,7 +127,7 @@ class IntegerProgrammingDemo:
                 print(f"  ✓ {locations[i]} - 建设成本: {construction_cost[i]}万元, "
                       f"年运营成本: {operating_cost[i]}万元, 服务能力: {capacity[i]}万件/年")
         
-        print(f"\n📊 方案总结:")
+print(f"\n方案总结：")
         print(f"  选中地点: {', '.join(selected_locations)}")
         print(f"  总服务能力: {total_capacity} 万件/年")
         print(f"  需求满足率: {total_capacity/total_demand*100:.1f}%")
@@ -200,14 +200,14 @@ class IntegerProgrammingDemo:
         max_value = pulp.value(prob.objective)
         total_weight = sum(weights[i] * selected_items[i] for i in range(len(items)))
         
-        print(f"\n✅ 最优选择方案:")
+print(f"\n最优选择方案：")
         selected_item_names = []
         for i in range(len(items)):
             if selected_items[i]:
                 selected_item_names.append(items[i])
                 print(f"  ✓ {items[i]} - 价值: {values[i]}元, 重量: {weights[i]}kg")
         
-        print(f"\n📊 方案总结:")
+print(f"\n方案总结：")
         print(f"  选中物品: {', '.join(selected_item_names)}")
         print(f"  总价值: {max_value:.0f} 元")
         print(f"  总重量: {total_weight:.1f} kg")
@@ -375,7 +375,7 @@ class IntegerProgrammingDemo:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close(fig)
         
-        print("✅ 可视化图表已保存为 'integer_programming_results.png'")
+print("可视化图表已保存为 'integer_programming_results.png'")
     
     def scenario_analysis(self):
         """情景分析
@@ -438,7 +438,7 @@ class IntegerProgrammingDemo:
             return
         
         print("\n" + "="*50)
-        print("📋 整数规划优化报告")
+print("整数规划优化报告")
         print("="*50)
         
         print(f"\n🎯 设施选址问题:")
@@ -446,13 +446,13 @@ class IntegerProgrammingDemo:
         print(f"  • 决策变量: 是否在候选地点建设设施")
         print(f"  • 约束条件: 选择3个地点，满足需求")
         
-        print(f"\n📊 最优方案:")
+print(f"\n最优方案：")
         for detail in self.results['selected_details']:
             print(f"  • {detail['location']}: 建设成本 {detail['construction_cost']}万元, "
                   f"年运营成本 {detail['operating_cost']}万元, "
                   f"服务能力 {detail['capacity']}万件/年")
         
-        print(f"\n💰 成本分析:")
+print(f"\n成本分析：")
         total_construction = sum(detail['construction_cost'] 
                                for detail in self.results['selected_details'])
         total_operating = sum(detail['operating_cost'] * 5 
@@ -473,7 +473,7 @@ class IntegerProgrammingDemo:
             print(f"  • 总重量: {knapsack['total_weight']:.1f} kg")
             print(f"  • 容量利用率: {knapsack['total_weight']/knapsack['capacity']*100:.1f}%")
         
-        print(f"\n💡 管理建议:")
+print(f"\n管理建议：")
         if self.results['total_capacity'] / self.results['total_demand'] < 1.1:
             print(f"  • 服务能力余量较小，建议考虑增加备用方案")
         

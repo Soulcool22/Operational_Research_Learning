@@ -57,14 +57,14 @@ class OperationsResearchMainDemo:
     def show_menu(self):
         """显示主菜单"""
         print("\n" + "="*50)
-        print("📋 请选择要运行的演示:")
+print("请选择要运行的演示：")
         print("="*50)
         print("1. 🔢 线性规划演示 (Linear Programming)")
         print("2. 🎲 整数规划演示 (Integer Programming)")
-        print("3. 🚛 运输问题演示 (Transportation Problem)")
-        print("4. 🌐 网络流优化演示 (Network Flow)")
-        print("5. 🚀 运行所有演示 (Run All Demos)")
-        print("6. 📊 查看结果汇总 (View Summary)")
+print("3. 运输问题演示（Transportation Problem）")
+print("4. 网络流优化演示（Network Flow）")
+print("5. 运行所有演示（Run All Demos）")
+print("6. 查看结果汇总（View Summary）")
         print("7. 🔄 重新运行特定演示 (Re-run Specific Demo)")
         print("0. 🚪 退出程序 (Exit)")
         print("="*50)
@@ -103,7 +103,7 @@ class OperationsResearchMainDemo:
                 'status': 'completed'
             }
             
-            print(f"✅ 线性规划演示完成 (耗时: {execution_time:.2f}秒)")
+print(f"线性规划演示完成（耗时：{execution_time:.2f}秒）")
             return True
             
         except Exception as e:
@@ -148,7 +148,7 @@ class OperationsResearchMainDemo:
                 'status': 'completed'
             }
             
-            print(f"✅ 整数规划演示完成 (耗时: {execution_time:.2f}秒)")
+print(f"整数规划演示完成（耗时：{execution_time:.2f}秒）")
             return True
             
         except Exception as e:
@@ -161,7 +161,7 @@ class OperationsResearchMainDemo:
     
     def run_transportation_demo(self):
         """运行运输问题演示"""
-        print("\n🚛 启动运输问题演示...")
+print("\n启动运输问题演示...")
         start_time = time.time()
         
         try:
@@ -193,7 +193,7 @@ class OperationsResearchMainDemo:
                 'status': 'completed'
             }
             
-            print(f"✅ 运输问题演示完成 (耗时: {execution_time:.2f}秒)")
+print(f"运输问题演示完成（耗时：{execution_time:.2f}秒）")
             return True
             
         except Exception as e:
@@ -206,7 +206,7 @@ class OperationsResearchMainDemo:
     
     def run_network_flow_demo(self):
         """运行网络流优化演示"""
-        print("\n🌐 启动网络流优化演示...")
+print("\n启动网络流优化演示...")
         start_time = time.time()
         
         try:
@@ -242,7 +242,7 @@ class OperationsResearchMainDemo:
                 'status': 'completed'
             }
             
-            print(f"✅ 网络流优化演示完成 (耗时: {execution_time:.2f}秒)")
+print(f"网络流优化演示完成（耗时：{execution_time:.2f}秒）")
             return True
             
         except Exception as e:
@@ -255,7 +255,7 @@ class OperationsResearchMainDemo:
     
     def run_all_demos(self):
         """运行所有演示"""
-        print("\n🚀 启动所有演示...")
+print("\n启动所有演示...")
         print("这可能需要几分钟时间，请耐心等待...")
         
         total_start_time = time.time()
@@ -282,7 +282,7 @@ class OperationsResearchMainDemo:
         total_execution_time = time.time() - total_start_time
         
         print(f"\n🎉 所有演示完成!")
-        print(f"✅ 成功: {success_count}/{total_demos}")
+print(f"成功：{success_count}/{total_demos}")
         print(f"⏱️  总耗时: {total_execution_time:.2f}秒")
         
         if success_count < total_demos:
@@ -295,7 +295,7 @@ class OperationsResearchMainDemo:
             return
         
         print("\n" + "="*60)
-        print("📊 运筹学优化结果汇总")
+print("运筹学优化结果汇总")
         print("="*60)
         
         total_execution_time = 0
@@ -309,12 +309,12 @@ class OperationsResearchMainDemo:
                 execution_time = results.get('execution_time', 0)
                 total_execution_time += execution_time
                 
-                print(f"  ✅ 状态: 成功完成")
+print(f"  状态：成功完成")
                 print(f"  ⏱️  执行时间: {execution_time:.2f}秒")
                 
                 # 显示关键结果
                 if demo_name == 'linear_programming':
-                    print(f"  💰 最大利润: {results.get('max_profit', 'N/A')}")
+print(f"  最大利润：{results.get('max_profit', 'N/A')}")
                     print(f"  📈 投资组合收益: {results.get('portfolio_return', 'N/A'):.4f}")
                 
                 elif demo_name == 'integer_programming':
@@ -322,12 +322,12 @@ class OperationsResearchMainDemo:
                     print(f"  🎒 最大背包价值: {results.get('max_knapsack_value', 'N/A')}")
                 
                 elif demo_name == 'transportation':
-                    print(f"  🚛 基础运输最小成本: {results.get('basic_min_cost', 'N/A'):.2f}")
-                    print(f"  📦 多产品运输最小成本: {results.get('multi_min_cost', 'N/A'):.2f}")
+print(f"  基础运输最小成本：{results.get('basic_min_cost', 'N/A'):.2f}")
+print(f"  多产品运输最小成本：{results.get('multi_min_cost', 'N/A'):.2f}")
                 
                 elif demo_name == 'network_flow':
                     print(f"  💧 最大流量: {results.get('max_flow_value', 'N/A')}")
-                    print(f"  💰 最小费用流成本: {results.get('min_cost_flow', 'N/A'):.2f}")
+print(f"  最小费用流成本：{results.get('min_cost_flow', 'N/A'):.2f}")
                     print(f"  🗺️  最短路径距离: {results.get('shortest_distance', 'N/A')}")
             
             else:

@@ -47,7 +47,7 @@ class LargeScaleOptimization:
     def __init__(self):
         self.results = {}
         print("=" * 70)
-        print("🚀 大规模运筹学优化演示系统")
+print("大规模运筹学优化演示系统")
         print("Large-Scale Operations Research Optimization Demo")
         print("=" * 70)
     
@@ -56,7 +56,7 @@ class LargeScaleOptimization:
         作用：构造多产品-多资源的稀疏数据集，模拟真实工厂的资源占用与利润分布。
         规则：固定随机种子以保证可重复；利润下限截断；每个产品仅使用部分资源以体现稀疏性。
         """
-        print(f"\n📊 生成大规模生产数据: {n_products}种产品, {n_resources}种资源")
+print(f"\n生成大规模生产数据：{n_products}种产品，{n_resources}种资源")
         
         # 产品名称
         products = [f'产品_{i+1:02d}' for i in range(n_products)]
@@ -129,7 +129,7 @@ class LargeScaleOptimization:
         non_zero_products = sum(1 for s in solution if s > 0.01)
         avg_production = np.mean([s for s in solution if s > 0.01])
         
-        print(f"\n✅ 求解结果:")
+print(f"\n求解结果：")
         print(f"  求解时间: {solve_time:.2f} 秒")
         print(f"  最大利润: {max_profit:,.2f} 元")
         print(f"  生产产品数: {non_zero_products}/{len(products)}")
@@ -143,7 +143,7 @@ class LargeScaleOptimization:
         
         utilization_rates = resource_usage / capacity * 100
         
-        print(f"\n📊 资源利用率统计:")
+print(f"\n资源利用率统计：")
         print(f"  平均利用率: {np.mean(utilization_rates):.1f}%")
         print(f"  最高利用率: {np.max(utilization_rates):.1f}%")
         print(f"  最低利用率: {np.min(utilization_rates):.1f}%")
@@ -167,7 +167,7 @@ class LargeScaleOptimization:
         作用：构造供应商-客户网络的供应、需求、距离与成本矩阵，用于全国运输优化。
         规则：总需求略小于总供应以保证可行；成本=距离×单位成本+固定成本；城市列表用于模拟地理分布。
         """
-        print(f"\n🚛 生成物流网络数据: {n_suppliers}个供应商, {n_customers}个客户")
+print(f"\n生成物流网络数据：{n_suppliers}个供应商，{n_customers}个客户")
         
         # 中国主要城市作为节点
         cities = [
@@ -264,7 +264,7 @@ class LargeScaleOptimization:
                            for j in range(len(customers)) 
                            if solution_matrix[i][j] > 0.01)
         
-        print(f"\n✅ 优化结果:")
+print(f"\n优化结果：")
         print(f"  求解时间: {solve_time:.2f} 秒")
         print(f"  最小运输成本: {min_cost:,.2f} 元")
         print(f"  总运输量: {total_shipment:,.1f} 吨")
@@ -275,7 +275,7 @@ class LargeScaleOptimization:
         supplier_usage = np.sum(solution_matrix, axis=1)
         supplier_utilization = supplier_usage / supply * 100
         
-        print(f"\n📊 供应商利用率:")
+print(f"\n供应商利用率：")
         print(f"  平均利用率: {np.mean(supplier_utilization):.1f}%")
         print(f"  满负荷供应商: {sum(1 for rate in supplier_utilization if rate > 95)}")
         
@@ -380,13 +380,13 @@ class LargeScaleOptimization:
         total_distance = sum(route_distances)
         used_vehicles = sum(1 for route in routes if route)
         
-        print(f"\n✅ VRP求解结果:")
+print(f"\nVRP求解结果：")
         print(f"  求解时间: {solve_time:.3f} 秒")
         print(f"  使用车辆数: {used_vehicles}/{n_vehicles}")
         print(f"  总行驶距离: {total_distance:.1f} 单位")
         print(f"  平均车辆利用率: {np.mean([load/vehicle_capacity*100 for load in route_loads if load > 0]):.1f}%")
         
-        print(f"\n🚛 详细路线:")
+print(f"\n详细路线：")
         for i, route in enumerate(routes):
             if route:
                 route_str = f"配送中心 → " + " → ".join([f"客户_{j:02d}" for j in route]) + " → 配送中心"
@@ -410,7 +410,7 @@ class LargeScaleOptimization:
     
     def portfolio_optimization(self):
         """投资组合优化演示"""
-        print("\n💰 4. 投资组合优化 - 金融应用")
+print("\n4. 投资组合优化 - 金融应用")
         print("-" * 50)
         
         # 股票数据（模拟）
@@ -479,7 +479,7 @@ class LargeScaleOptimization:
         active_stocks = sum(1 for w in optimal_weights if w > min_weight + 0.001)
         max_investment = max(investments)
         
-        print(f"\n✅ 最优投资组合:")
+print(f"\n最优投资组合：")
         print(f"  求解时间: {solve_time:.3f} 秒")
         print(f"  组合预期收益: {portfolio_return*100:.2f}%")
         print(f"  组合风险: {portfolio_risk*100:.2f}%")
@@ -736,7 +736,7 @@ class LargeScaleOptimization:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
         
-        print("✅ 大规模优化可视化图表已保存为 'large_scale_results.png'")
+print("大规模优化可视化图表已保存为 'large_scale_results.png'")
     
     def performance_comparison(self):
         """性能对比分析
@@ -795,10 +795,10 @@ class LargeScaleOptimization:
         
         # 显示性能表
         df_performance = pd.DataFrame(performance_data)
-        print("\n📊 算法性能对比:")
+print("\n算法性能对比：")
         print(df_performance.to_string(index=False))
         
-        print(f"\n💡 性能分析:")
+print(f"\n性能分析：")
         print(f"  • 线性规划适合连续优化问题，求解效率高")
         print(f"  • 运输问题是特殊线性规划，网络结构清晰")
         print(f"  • VRP使用启发式算法，快速但可能非最优")

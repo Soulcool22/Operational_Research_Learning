@@ -42,8 +42,7 @@ class NetworkFlowDemo:
         self.results = {}
         self.graphs = {}
         print("=" * 50)
-        print("🌐 网络流优化演示")
-        print("Network Flow Optimization Demo")
+        print("网络流优化演示")
         print("=" * 50)
     
     def solve_max_flow_problem(self):
@@ -55,7 +54,7 @@ class NetworkFlowDemo:
         原理：最大流-最小割定理；瓶颈边决定整体可达流量。
         规则：中文输出与统一风格；结果存储供后续图表与报告使用。
         """
-        print("\n💧 最大流问题 - 供水网络优化")
+        print("\n最大流问题 - 供水网络优化")
         print("-" * 40)
         
         # 创建网络图
@@ -87,10 +86,10 @@ class NetworkFlowDemo:
         # 使用NetworkX求解最大流（Edmonds–Karp）
         max_flow_value, max_flow_dict = nx.maximum_flow(G, 'S', 'T')
         
-        print(f"\n✅ 最大流结果:")
+        print(f"\n最大流结果：")
         print(f"  最大流量: {max_flow_value} 单位/小时")
         
-        print(f"\n🌊 最优流量分配:")
+        print(f"\n最优流量分配：")
         total_flow_used = 0
         flow_details = []
         for start in max_flow_dict:
@@ -115,7 +114,7 @@ class NetworkFlowDemo:
                            if detail['utilization'] >= 99.9]
         
         if bottleneck_edges:
-            print(f"\n🚧 网络瓶颈:")
+            print(f"\n网络瓶颈：")
             for edge in bottleneck_edges:
                 print(f"  {edge['from']} → {edge['to']}: 满负荷运行")
         
@@ -204,10 +203,10 @@ class NetworkFlowDemo:
         # 结果
         min_cost = pulp.value(prob.objective)
         
-        print(f"\n✅ 最小费用流结果:")
+        print(f"\n最小费用流结果：")
         print(f"  最小运输成本: {min_cost:.2f} 元")
         
-        print(f"\n🛣️  最优配送方案:")
+        print(f"\n最优配送方案：")
         flow_solution = {}
         cost_details = []
         for start, end, cost, capacity in transport_data:
@@ -271,9 +270,9 @@ class NetworkFlowDemo:
         for city1, city2, distance in roads:
             G.add_edge(city1, city2, weight=distance)
         
-        print("交通网络:")
-        print("城市节点:", cities)
-        print("道路距离:")
+        print("交通网络：")
+        print("城市节点：", cities)
+        print("道路距离：")
         for city1, city2, distance in roads:
             print(f"  {city1} ↔ {city2}: {distance} km")
         
@@ -282,7 +281,7 @@ class NetworkFlowDemo:
         # 计算最短路径与距离（Dijkstra，权重字段为 'weight'）
         shortest_distance = nx.shortest_path_length(G, '起点', '终点', weight='weight')
         
-        print(f"\n✅ 最短路径结果:")
+        print(f"\n最短路径结果：")
         print(f"  最短距离: {shortest_distance} km")
         print(f"  最短路径: {' → '.join(shortest_path)}")
         
@@ -306,7 +305,7 @@ class NetworkFlowDemo:
         # 计算所有节点间的最短路径（用于分析网络连通性）
         all_shortest_paths = dict(nx.all_pairs_shortest_path_length(G))
         
-        print(f"\n🌐 网络连通性分析:")
+        print(f"\n网络连通性分析：")
         print(f"  网络直径: {nx.diameter(G, weight='weight'):.1f} km")
         print(f"  平均路径长度: {nx.average_shortest_path_length(G, weight='weight'):.1f} km")
         
@@ -605,7 +604,7 @@ class NetworkFlowDemo:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close(fig)
         
-        print("✅ 网络流可视化图表已保存为 'network_flow_results.png'")
+        print("网络流可视化图表已保存为 'network_flow_results.png'")
     
     def network_analysis(self):
         """网络结构分析
@@ -613,10 +612,10 @@ class NetworkFlowDemo:
         规则：中文输出、结构化信息。
         """
         if not self.graphs:
-            print("⚠️ 请先运行求解方法")
+            print("请先运行求解方法")
             return
         
-        print("\n🔍 网络结构分析")
+        print("\n网络结构分析")
         print("-" * 30)
         
         for problem_type, G in self.graphs.items():
@@ -639,16 +638,16 @@ class NetworkFlowDemo:
         规则：条理清晰、教学友好；将技术结果转化为业务可读信息。
         """
         if not self.results:
-            print("⚠️ 请先运行求解方法")
+            print("请先运行求解方法")
             return
         
         print("\n" + "="*50)
-        print("📋 网络流优化报告")
+        print("网络流优化报告")
         print("="*50)
         
         if 'max_flow' in self.results:
             max_flow_data = self.results['max_flow']
-            print(f"\n💧 最大流问题:")
+            print(f"\n最大流问题：")
             print(f"  • 优化目标: 最大化网络流量")
             print(f"  • 最大流量: {max_flow_data['max_flow_value']} 单位/小时")
             print(f"  • 活跃边数: {len(max_flow_data['flow_details'])}")
@@ -659,7 +658,7 @@ class NetworkFlowDemo:
         
         if 'min_cost_flow' in self.results:
             mcf_data = self.results['min_cost_flow']
-            print(f"\n🚚 最小费用流问题:")
+            print(f"\n最小费用流问题：")
             print(f"  • 优化目标: 最小化运输成本")
             print(f"  • 最小成本: {mcf_data['min_cost']:.2f} 元")
             print(f"  • 总供应量: {sum(mcf_data['supply'].values())} 单位")
@@ -671,13 +670,13 @@ class NetworkFlowDemo:
         
         if 'shortest_path' in self.results:
             sp_data = self.results['shortest_path']
-            print(f"\n🗺️  最短路径问题:")
+            print(f"\n最短路径问题：")
             print(f"  • 优化目标: 最小化路径距离")
             print(f"  • 最短距离: {sp_data['shortest_distance']} km")
             print(f"  • 路径长度: {len(sp_data['shortest_path'])} 个节点")
             print(f"  • 路径: {' → '.join(sp_data['shortest_path'])}")
         
-        print(f"\n💡 优化建议:")
+        print(f"\n优化建议：")
         
         if 'max_flow' in self.results and max_flow_data['bottleneck_edges']:
             print(f"  • 最大流: 考虑扩容瓶颈边以提高网络流量")

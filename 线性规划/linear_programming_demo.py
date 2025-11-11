@@ -45,7 +45,7 @@ class LinearProgrammingDemo:
         # 初始化结果容器；打印统一的演示标题，提升交互体验
         self.results = {}
         print("=" * 50)
-        print("📊 线性规划优化演示")
+print("线性规划优化演示")
         print("Linear Programming Demo")
         print("=" * 50)
 
@@ -62,7 +62,7 @@ class LinearProgrammingDemo:
         - prob.solve(PULP_CBC_CMD(msg=0)) 使用CBC求解器静默求解
         原理：线性规划可行域为凸多边形，最优解位于可行域的极点（单纯形法思想）。
         """
-        print("\n📊 生产计划优化问题")
+print("\n生产计划优化问题")
         print("-" * 40)
         
         # 问题数据（与题目集说明一致，确保教学与代码对齐）
@@ -107,7 +107,7 @@ class LinearProgrammingDemo:
         solution = [x[i].varValue for i in range(3)]
         max_profit = pulp.value(prob.objective)
         
-        print(f"\n✅ 最优解:")
+print(f"\n最优解：")
         for i, product in enumerate(products):
             print(f"  {product}: {solution[i]:.2f} 单位")
         print(f"  最大利润: {max_profit:.2f} 元")
@@ -238,7 +238,7 @@ class LinearProgrammingDemo:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close(fig)
 
-        print("✅ 可视化图表已保存为 'linear_programming_results.png'")
+print("可视化图表已保存为 'linear_programming_results.png'")
     
     def sensitivity_analysis(self):
         """敏感性分析
@@ -290,7 +290,7 @@ class LinearProgrammingDemo:
             return
         
         print("\n" + "="*50)
-        print("📋 线性规划优化报告")
+print("线性规划优化报告")
         print("="*50)
         
         print(f"\n🎯 问题描述:")
@@ -298,7 +298,7 @@ class LinearProgrammingDemo:
         print(f"  • 决策变量: 三种产品的生产数量")
         print(f"  • 约束条件: 劳动力和原材料限制")
         
-        print(f"\n📊 最优解:")
+print(f"\n最优解：")
         for i, product in enumerate(self.results['products']):
             print(f"  • {product}: {self.results['solution'][i]:.2f} 单位")
         print(f"  • 最大利润: {self.results['max_profit']:.2f} 元")
@@ -309,7 +309,7 @@ class LinearProgrammingDemo:
         print(f"  • 劳动力利用率: {labor_util:.1f}%")
         print(f"  • 原材料利用率: {material_util:.1f}%")
         
-        print(f"\n💡 管理建议:")
+print(f"\n管理建议：")
         if labor_util > 95:
             print(f"  • 劳动力资源接近满负荷，建议考虑增加人力")
         if material_util > 95:

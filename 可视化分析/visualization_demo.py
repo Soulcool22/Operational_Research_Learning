@@ -222,7 +222,7 @@ class OptimizationVisualization:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
         
-        print(f"✅ 优化完成，共迭代 {len(path_x)-1} 次")
+        print(f"优化完成，共迭代 {len(path_x)-1} 次")
         print(f"   最终解: ({current_x:.3f}, {current_y:.3f})")
         print(f"   目标函数值: {objective_function(current_x, current_y):.6f}")
     
@@ -234,7 +234,7 @@ class OptimizationVisualization:
         - 自定义布局保证教学可读性，边标签显示 `flow/capacity`
         规则：中文标签、统一样式、PNG输出（dpi=300）。
         """
-        print("\n🌐 3. 网络流优化可视化")
+        print("\n3. 网络流优化可视化")
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
         
@@ -327,7 +327,7 @@ class OptimizationVisualization:
     
     def sensitivity_analysis(self):
         """敏感性分析可视化"""
-        print("\n📊 4. 敏感性分析可视化")
+        print("\n4. 敏感性分析可视化")
         
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
         
